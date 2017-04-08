@@ -35,7 +35,20 @@ in
    PortGUI = {GUI.portWindow}
    {Send PortGUI buildWindow}
 
-   % Creation d'un record contenant les ports 'joueurs'
+   % Creation d'un record contenant les ports 'joueurs'. PortPlayers = portPlayer(1:P1 2:P2 3:P3 ... nbPlayer:PnbPlayer)
    PortPlayers={SetPlayersPort Input.players Input.colors Input.nbPlayer}
+
+   % Demande aux joueurs de choisir leur position initiale
+   for I in 1..{Width PortPlayers} do
+      local Id Pos in
+	 {Send PortPlayers.I initPosition(Id Pos)}
+	 {Send PortGUI initPlayer(Id Pos)}
+      end
+   end
+
+
+   if Input.isTurnByTurn then
+   else
+   end
    
 end
