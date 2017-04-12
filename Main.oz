@@ -2,13 +2,16 @@ functor
 import
    GUI
    Input
+   System
    PlayerManager
    Browser
 define
    Browse=Browser.browse
+   Show=System.show
    PortGUI
    PortPlayers
    BuildLifeRecord
+   PersonalNewRecord
    SetPlayersPort
    TurnByTurnGame
    CheckEnd
@@ -90,45 +93,56 @@ in
    in
       {CheckEndA Tab 1 0}
    end
+
+   fun{PersonalNewRecord R Feat Val}
+      PNRSub NewR
+   in
+      PNRSub = {Record.subtract R Feat}
+      NewR = {AdjoinAt R Feat Val}
+   end
    
    % Jeu tour par tour. S'arrete quand il ne reste plus qu'un joueur en vie 
    proc{TurnByTurnGame ActualP MaxP Life TurnAtSurface}
-      if Life.ActualP == 0 then {TurnByTurnGame (ActualP+1 mod MaxP) MaxP Life TurnAtSurface} 
+      
+      if Life.ActualP == 0 then {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface} 
       elseif {CheckEnd Life} then % End of the game
 	 {Browse 'End Of The Game'}
       else
-
+	 
 	 % IMPLEMENTER UN TOUR 
 	 % Check if the submarine can play |1|
 	 local Id Ans in
 	    {Send PortPlayers.ActualP isSurface(Id Ans)}
-	    if Ans == true then
+	    if Ans then
 	       if TurnAtSurface.ActualP == Input.turnSurface then
 		  %say dive |2|
 		  {Send PortPlayers.ActualP dive}
-		  TurnAtSurface.ActualP = 0
-	       else TurnAtSurface.ActualP = TurnAtSurface.ActualP + 1
+		  {TurnByTurnGame ActualP MaxP Life {PersonalNewRecord TurnAtSurface ActualP 0}}
+	       else
                   %finish
-		  {TurnByTurnGame (ActualP+1 mod MaxP) MaxP Life TurnAtSurface}
+		  {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life {PersonalNewRecord TurnAtSurface ActualP TurnAtSurface.ActualP+1}}
 	       end
 	    end
 	 end
 
+	 {Browse hello}
+	 {Delay 50}
 	 %Ask choose direction |3|
 	 local Id Position Direction in
 	    {Send PortPlayers.ActualP move(Id Position Direction)}
 	    if Direction == surface then
 		  %say to other player |4|
-	       {Sender saySurface(ActualP)}
+	       {Sender saySurface(Id)}
 		  %say to GUI
-	       {Send PortGUI surface(ActualP)}
+	       {Send PortGUI surface(Id)}
 		  %finish
-	       {TurnByTurnGame (ActualP+1 mod MaxP) MaxP Life TurnAtSurface}
+	       {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
 	    else
 		  %say to other player the direction |5|
-	       {Sender sayMove(ActualP Direction)}
+	       {Sender sayMove(Id Direction)}
 		  %say to the GUI
-	       {Send PortGUI movePlayer(ActualP Position)}
+	       {Browse zizi}
+	       {Send PortGUI movePlayer(Id Position)}
 	    end
 	 end
 
@@ -138,7 +152,7 @@ in
 	    {Wait Id}
 	    if {Value.isDet KindItem} then
 		  %say to other player that he charge
-	       {Sender sayCharge(ActualP KindItem)}
+	       {Sender sayCharge(Id KindItem)}
 	    end
 	 end
 
@@ -149,14 +163,14 @@ in
 	    if {Value.isDet KindFire} then
 		  %The case of KindFire is a mine 
 	       case KindFire of mine(P) then
-		  {Sender sayMinePlaced(ActualP)}
-		  {Send PortGUI putMine(ActualP P)}
+		  {Sender sayMinePlaced(Id)}
+		  {Send PortGUI putMine(Id P)}
 		     
 		  %The case of KindFire is a missile
 	       [] missile(P) then
 		     %say to each player that a missil was launched
 		  for X in 1..Input.nbPlayer do
-		     {Send PortPlayers.X sayMissileExplode(ActualP P Msg)}
+		     {Send PortPlayers.X sayMissileExplode(Id P Msg)}
 			%check the response of the player X
 		     if Msg > 0 then
 			   %the player X lost life point
@@ -233,18 +247,18 @@ in
 	 end
 
 	 %finish |9|
-	 {TurnByTurnGame (ActualP+1 mod MaxP) MaxP Life TurnAtSurface}
+	 {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
       end
    end
    
-   
+   {Browse 1}
    % Creation du Port vers le GUI et affichage de la fenetre
    PortGUI = {GUI.portWindow}
    {Send PortGUI buildWindow}
-
+   {Browse 2}
    % Creation d'un record contenant les ports 'joueurs'. PortPlayers = portPlayer(1:P1 2:P2 3:P3 ... nbPlayer:PnbPlayer)
    PortPlayers={SetPlayersPort Input.players Input.colors Input.nbPlayer}
-
+   {Browse 3}
    % Demande aux joueurs de choisir leur position initiale
    for I in 1..{Width PortPlayers} do
       local Id Pos in
@@ -252,9 +266,11 @@ in
 	 {Send PortGUI initPlayer(Id Pos)}
       end
    end
+   {Browse 4}
    {Wait PortPlayers.4}
-
+   {Browse 5}
    if Input.isTurnByTurn then
+      {Delay 10000}
       {TurnByTurnGame 1 Input.nbPlayer {BuildLifeRecord Input.nbPlayer} {BuildTurnAtSurfaceCounter Input.nbPlayer} }
    else
       skip
