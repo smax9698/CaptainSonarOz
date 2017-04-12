@@ -12,6 +12,8 @@ define
    SetPlayersPort
    TurnByTurnGame
    CheckEnd
+   BuildList
+   BuildTurnAtSurfaceCounter
    V
 in
 
@@ -25,22 +27,49 @@ in
 	 [] nil|nil then R
 	 end
       end
-      fun{BuildList A Max}
-	 if A == Max then Max|nil
-	 else
-	    A|{BuildList A+1 Max}
-	 end
-      end
+      
    in
       {FillRecord {MakeRecord portPlayer {BuildList 1 N}} KindP ColorP 1}
    end
 
-   fun{BuildLifeRecord NbPlayer}
-      if NbPlayer == 0 then nil
+   fun{BuildList A Max}
+      if A == Max then Max|nil
       else
-	 Input.maxDamage|{BuildLifeRecord NbPlayer-1}
+	 A|{BuildList A+1 Max}
       end
    end
+
+   fun{BuildLifeRecord NbPlayer}
+      Life
+   in
+      if NbPlayer == 0 then nil
+      else
+	 {MakeRecord life {BuildList 1 NbPlayer} Life}
+	 for X in 1..NbPlayer do
+	    Life.X = Input.maxDamage
+	 end	 
+      end
+   end
+
+   fun{BuildTurnAtSurfaceCounter NbPlayer}
+      Turn
+   in
+      if NbPlayer == 0 then nil
+      else
+	 {MakeRecord life {BuildList 1 NbPlayer} Turn}
+	 for X in 1..NbPlayer do
+	    Turn.X = Input.turnSurface
+	 end	 
+      end
+   end
+
+   %Send Message to all player
+   proc{Sender Msg}
+      for X in 1..Input.NbPlayer
+	 {Send PortPlayers.X Msg}
+      end
+   end
+   
 
    
    fun{CheckEnd Tab}
@@ -58,24 +87,158 @@ in
    end
    
    % Jeu tour par tour. S'arrete quand il ne reste plus qu'un joueur en vie 
-   fun{TurnByTurnGame ActualP MaxP Life}
-      Ans
+   fun{TurnByTurnGame ActualP MaxP Life TurnAtSurface}
+  
    in
-      if {CheckEnd Life} then % End of the game
+      if Life.ActualP == 0 then {TurnByTurnGame (ActualP+1 mod MaxP) MaxP Life} 
+      elseif {CheckEnd Life} then % End of the game
 	 {Browse 'End Of The Game'}
 	 true
       else
 
 	 % IMPLEMENTER UN TOUR 
-	 % Check if the submarine can play
-	 local Id in
+	 % Check if the submarine can play |1|
+	 local Id Ans in
 	    {Send PortPlayers.ActualP isSurface(Id Ans)}
+	    if Ans == true
+	       if TurnAtSurface.ActualP == Input.turnSurface then
+		  %say dive |2|
+		  {Send PortPlayers.ActualP dive}
+		  TurnAtSurface.ActualP = 0
+	       else TurnAtSurface.ActualP = TurnAtSurface.ActualP + 1
+                  %finish
+		  {TurnByTurnGame (ActualP+1 mod MaxP) MaxP Life TurnAtSurface}
+	       end
+	    end
 	 end
-	 
-	 {Browse Ans}
-	 {TurnByTurnGame ActualP MaxP [0 0 0 1]}
+
+	 %Ask choose direction |3|
+	 local Id Position Direction in
+	    {Send PortPlayer.ActualP move(Id Position Direction)}
+	    if Direction == surface then
+		  %say to other player |4|
+	       {Sender saySurface(ActualP)}
+		  %say to GUI
+	       {Send PortGUI surface(ActualP)}
+		  %finish
+	       {TurnByTurnGame (ActualP+1 mod MaxP) MaxP Life TurnAtSurface}
+	    else
+		  %say to other player the direction |5|
+	       {Sender sayMove(ActualP Direction)}
+		  %say to the GUI
+	       {Send PortGUI movePlayer(ActualP Position)}
+	    end
+	 end
+
+	 %Ask charge Item |6|
+	 local Id KindItem in
+	    {Send PortPlayers.ActualP chargeItem(Id KindItem)}
+	    {Wait Id}
+	    if {Value.isDet KindItem}
+		  %say to other player that he charge
+	       {Sender sayCharge(ActualP KindItem)}
+	    end
+	 end
+
+	 %Ask fire |7|
+	 local Id KindFire Msg in
+	    {Send PortPlayers.ActualP fireItem(Id KindFire)}
+	    {Wait Id}
+	    if {Value.isDet KindFire} then
+		  %The case of KindFire is a mine 
+	       case KindFire of mine(P) then
+		  {Sender sayMinePlaced(ActualP)}
+		  {Send PortGUI putMine(ActualP P)}
+		     
+		  %The case of KindFire is a missile
+	       [] missile(P) then
+		     %say to each player that a missil was launched
+		  for X in 1..Input.NbPlayer do
+		     Id Ans
+		  in
+		     {Send PortPlayers.X sayMissileExplode(ActualP P Msg)}
+			%check the response of the player X
+		     if Msg > 0 then
+			   %the player X lost life point
+			Life.X = {max 0 Life.X-Msg}
+			{Sender sayDamageTaken(X Msg Life.X)}
+			{Send PortGUI lifeUpdate(X Life.X)}
+			if Life.X == 0 then
+			       %The player X is dead
+			   {Sender sayDeath(X)}
+			end
+		     end
+		  end	  
+
+		%The case of KindFire is a drone(row)
+	       [] drone(row X) then
+		  for X in 1..Input.NbPlayer do
+		     Id Ans
+		  in
+		     {Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
+		     {Wait Id}
+		     {Send PortPlayers.ActualP sayAnswerDrone(Kindfire Id Ans)}
+		  end
+
+		%The case of KindFire is a drone(column)
+	       [] drone(column Y) then
+		  for X in 1..Input.NbPlayer do
+		     Id Ans
+		  in
+		     {Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
+		     {Wait Id}
+		     {Send PortPlayers.ActualP sayAnswerDrone(Kindfire Id Ans)}
+		  end
+		%The case of KindFire is a sonar
+	       [] sonar then
+		  for X in 1..Input.NbPlayer do
+		     Id Ans
+		  in
+		     {Send PortPlayers.X sayPassingSonar(Id Ans)}
+		     {Wait Id}
+		     {Send PortPlayers.ActualP sayAnswerSonar(Id Ans)}
+		  end
+		     %The case of KindFire is null
+	       [] nil then
+		  skip
+	       end
+	    end
+	 end
+
+	 %explode mine |8|
+	 local Id Mine Msg in
+	    {Send PortPlayers.ActualP fireMine(Id Mine)}
+	    {Wait Id}
+	    if {Value.isDet Mine}
+	       if Mine != nil
+		   %say to each player that a mine explode
+		  for X in 1..Input.NbPlayer do
+		     Id Ans
+		  in
+		     {Send PortPlayers.X sayMineExplode(ActualP Mine Msg)}
+			%check the response of the player X
+		     if Msg > 0 then
+			   %the player X lost life point
+			Life.X = {max 0 Life.X-Msg}
+			{Sender sayDamageTaken(X Msg Life.X)}
+			{Send PortGUI lifeUpdate(X Life.X)}
+			if Life.X == 0 then
+			       %The player X is dead
+			   {Sender sayDeath(X)}
+			end
+		     end
+		  end
+	       end
+	       
+	    end
+	    
+	 end
+
+	 %finish |9|
+	 {TurnByTurnGame (ActualP+1 mod MaxP) MaxP Life TurnAtSurface}
       end
    end
+   
    
    % Creation du Port vers le GUI et affichage de la fenetre
    PortGUI = {GUI.portWindow}
@@ -94,7 +257,7 @@ in
    {Wait PortPlayers.4}
 
    if Input.isTurnByTurn then
-      V = {TurnByTurnGame 1 Input.nbPlayer {BuildLifeRecord Input.nbPlayer}}
+      V = {TurnByTurnGame 1 Input.nbPlayer {BuildLifeRecord Input.nbPlayer} {BuildTurnAtSurfaceCounter Input.nbPlayer} }
    else
       skip
    end
