@@ -14,7 +14,7 @@ define
    CheckEnd
    BuildList
    BuildTurnAtSurfaceCounter
-   V
+   Sender
 in
 
    % Retourne un Record contenant l'ensemble des ports associés aux joueurs
@@ -47,7 +47,8 @@ in
 	 {MakeRecord life {BuildList 1 NbPlayer} Life}
 	 for X in 1..NbPlayer do
 	    Life.X = Input.maxDamage
-	 end	 
+	 end
+	 Life
       end
    end
 
@@ -59,13 +60,14 @@ in
 	 {MakeRecord life {BuildList 1 NbPlayer} Turn}
 	 for X in 1..NbPlayer do
 	    Turn.X = Input.turnSurface
-	 end	 
+	 end
+	 Turn
       end
    end
 
    %Send Message to all player
    proc{Sender Msg}
-      for X in 1..Input.NbPlayer
+      for X in 1..Input.nbPlayer do
 	 {Send PortPlayers.X Msg}
       end
    end
@@ -73,34 +75,34 @@ in
 
    
    fun{CheckEnd Tab}
-      fun{CheckEnd T Acc}
-	 case T
-	 of A|B then
-	    if A == 0 then {CheckEnd B Acc+1}
-	    else {CheckEnd B Acc}
+      fun{CheckEndA T Pos Acc}
+	 A
+      in
+	 if Pos> Input.nbPlayer then
+	    Acc == (Input.nbPlayer-1)
+	 else
+	    A = T.Pos
+	    if A == 0 then {CheckEndA T Pos+1 Acc+1}
+	    else {CheckEndA T Pos+1 Acc}
 	    end
-	 [] nil then {Browse Acc} Acc==(Input.nbPlayer-1)
 	 end
       end
    in
-      {CheckEnd Tab 0}
+      {CheckEndA Tab 1 0}
    end
    
    % Jeu tour par tour. S'arrete quand il ne reste plus qu'un joueur en vie 
-   fun{TurnByTurnGame ActualP MaxP Life TurnAtSurface}
-  
-   in
-      if Life.ActualP == 0 then {TurnByTurnGame (ActualP+1 mod MaxP) MaxP Life} 
+   proc{TurnByTurnGame ActualP MaxP Life TurnAtSurface}
+      if Life.ActualP == 0 then {TurnByTurnGame (ActualP+1 mod MaxP) MaxP Life TurnAtSurface} 
       elseif {CheckEnd Life} then % End of the game
 	 {Browse 'End Of The Game'}
-	 true
       else
 
 	 % IMPLEMENTER UN TOUR 
 	 % Check if the submarine can play |1|
 	 local Id Ans in
 	    {Send PortPlayers.ActualP isSurface(Id Ans)}
-	    if Ans == true
+	    if Ans == true then
 	       if TurnAtSurface.ActualP == Input.turnSurface then
 		  %say dive |2|
 		  {Send PortPlayers.ActualP dive}
@@ -114,7 +116,7 @@ in
 
 	 %Ask choose direction |3|
 	 local Id Position Direction in
-	    {Send PortPlayer.ActualP move(Id Position Direction)}
+	    {Send PortPlayers.ActualP move(Id Position Direction)}
 	    if Direction == surface then
 		  %say to other player |4|
 	       {Sender saySurface(ActualP)}
@@ -134,7 +136,7 @@ in
 	 local Id KindItem in
 	    {Send PortPlayers.ActualP chargeItem(Id KindItem)}
 	    {Wait Id}
-	    if {Value.isDet KindItem}
+	    if {Value.isDet KindItem} then
 		  %say to other player that he charge
 	       {Sender sayCharge(ActualP KindItem)}
 	    end
@@ -153,14 +155,12 @@ in
 		  %The case of KindFire is a missile
 	       [] missile(P) then
 		     %say to each player that a missil was launched
-		  for X in 1..Input.NbPlayer do
-		     Id Ans
-		  in
+		  for X in 1..Input.nbPlayer do
 		     {Send PortPlayers.X sayMissileExplode(ActualP P Msg)}
 			%check the response of the player X
 		     if Msg > 0 then
 			   %the player X lost life point
-			Life.X = {max 0 Life.X-Msg}
+			Life.X = {Max 0 Life.X-Msg}
 			{Sender sayDamageTaken(X Msg Life.X)}
 			{Send PortGUI lifeUpdate(X Life.X)}
 			if Life.X == 0 then
@@ -172,26 +172,26 @@ in
 
 		%The case of KindFire is a drone(row)
 	       [] drone(row X) then
-		  for X in 1..Input.NbPlayer do
+		  for X in 1..Input.nbPlayer do
 		     Id Ans
 		  in
 		     {Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
 		     {Wait Id}
-		     {Send PortPlayers.ActualP sayAnswerDrone(Kindfire Id Ans)}
+		     {Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
 		  end
 
 		%The case of KindFire is a drone(column)
 	       [] drone(column Y) then
-		  for X in 1..Input.NbPlayer do
+		  for X in 1..Input.nbPlayer do
 		     Id Ans
 		  in
 		     {Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
 		     {Wait Id}
-		     {Send PortPlayers.ActualP sayAnswerDrone(Kindfire Id Ans)}
+		     {Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
 		  end
 		%The case of KindFire is a sonar
 	       [] sonar then
-		  for X in 1..Input.NbPlayer do
+		  for X in 1..Input.nbPlayer do
 		     Id Ans
 		  in
 		     {Send PortPlayers.X sayPassingSonar(Id Ans)}
@@ -209,17 +209,15 @@ in
 	 local Id Mine Msg in
 	    {Send PortPlayers.ActualP fireMine(Id Mine)}
 	    {Wait Id}
-	    if {Value.isDet Mine}
-	       if Mine != nil
+	    if {Value.isDet Mine} then
+	       if (Mine \= nil) then
 		   %say to each player that a mine explode
-		  for X in 1..Input.NbPlayer do
-		     Id Ans
-		  in
+		  for X in 1..Input.nbPlayer do
 		     {Send PortPlayers.X sayMineExplode(ActualP Mine Msg)}
 			%check the response of the player X
 		     if Msg > 0 then
 			   %the player X lost life point
-			Life.X = {max 0 Life.X-Msg}
+			Life.X = {Max 0 Life.X-Msg}
 			{Sender sayDamageTaken(X Msg Life.X)}
 			{Send PortGUI lifeUpdate(X Life.X)}
 			if Life.X == 0 then
@@ -257,7 +255,7 @@ in
    {Wait PortPlayers.4}
 
    if Input.isTurnByTurn then
-      V = {TurnByTurnGame 1 Input.nbPlayer {BuildLifeRecord Input.nbPlayer} {BuildTurnAtSurfaceCounter Input.nbPlayer} }
+      {TurnByTurnGame 1 Input.nbPlayer {BuildLifeRecord Input.nbPlayer} {BuildTurnAtSurfaceCounter Input.nbPlayer} }
    else
       skip
    end
