@@ -103,6 +103,9 @@ in
    
    % Jeu tour par tour. S'arrete quand il ne reste plus qu'un joueur en vie 
    proc{TurnByTurnGame ActualP MaxP Life TurnAtSurface}
+      NewLife NextLife
+   in
+      
       
       if Life.ActualP == 0 then {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface} 
       elseif {CheckEnd Life} then % End of the game
@@ -114,13 +117,18 @@ in
 	 local Id Ans in
 	    {Send PortPlayers.ActualP isSurface(Id Ans)}
 	    if Ans then
+	       {Browse 'tuple'(ActualP Ans TurnAtSurface.ActualP)}
+	       {Delay 1000}
 	       if TurnAtSurface.ActualP == Input.turnSurface then
 		  %say dive |2|
 		  {Send PortPlayers.ActualP dive}
+		  {Browse TurnAtSurface.ActualP}
+		  {Delay 2000}
 		  {TurnByTurnGame ActualP MaxP Life {PersonalNewRecord TurnAtSurface ActualP 0}}
 	       else
                   %finish
-		  {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life {PersonalNewRecord TurnAtSurface ActualP TurnAtSurface.ActualP+1}}
+		  {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life
+		   {PersonalNewRecord TurnAtSurface ActualP TurnAtSurface.ActualP+1}}
 	       end
 	    end
 	 end
@@ -129,6 +137,8 @@ in
 	 {Delay 50}
 	 %Ask choose direction |3|
 	 local Id Position Direction in
+	    {Browse 'move'}
+	    %{Delay 1000}
 	    {Send PortPlayers.ActualP move(Id Position Direction)}
 	    if Direction == surface then
 		  %say to other player |4|
@@ -141,13 +151,14 @@ in
 		  %say to other player the direction |5|
 	       {Sender sayMove(Id Direction)}
 		  %say to the GUI
-	       {Browse zizi}
 	       {Send PortGUI movePlayer(Id Position)}
 	    end
 	 end
 
 	 %Ask charge Item |6|
 	 local Id KindItem in
+	     {Browse 'ChargeItem'}
+	    %{Delay 1000}
 	    {Send PortPlayers.ActualP chargeItem(Id KindItem)}
 	    {Wait Id}
 	    if {Value.isDet KindItem} then
@@ -157,9 +168,14 @@ in
 	 end
 
 	 %Ask fire |7|
-	 local Id KindFire Msg in
+	 local Id KindFire MsgR in
+	    MsgR = {MakeRecord msg {BuildList 1 Input.nbPlayer}}
+	     {Browse 'fireItem'}
+	    {Delay 1000}
 	    {Send PortPlayers.ActualP fireItem(Id KindFire)}
 	    {Wait Id}
+	     {Browse 'fireItem'(KindFire)}
+	    {Delay 1000}
 	    if {Value.isDet KindFire} then
 		  %The case of KindFire is a mine 
 	       case KindFire of mine(P) then
@@ -169,20 +185,35 @@ in
 		  %The case of KindFire is a missile
 	       [] missile(P) then
 		     %say to each player that a missil was launched
-		  for X in 1..Input.nbPlayer do
-		     {Send PortPlayers.X sayMissileExplode(Id P Msg)}
+		  fun{Launch X L}
+		     LP N
+		  in
+		     
+		     if X > Input.nbPlayer then L
+		     else
+			{Send PortPlayers.X sayMissileExplode(Id P MsgR.X)}
+			{Browse 'fireItem send missile'(X)}
+			{Delay 1000}
 			%check the response of the player X
-		     if Msg > 0 then
+			if MsgR.X > 0 then
 			   %the player X lost life point
-			Life.X = {Max 0 Life.X-Msg}
-			{Sender sayDamageTaken(X Msg Life.X)}
-			{Send PortGUI lifeUpdate(X Life.X)}
-			if Life.X == 0 then
+			   {Browse 'fireItem touch'(X)}
+			   {Delay 1000}
+			   LP = {Max 0 L.X-MsgR.X}
+			   {Sender sayDamageTaken(X MsgR.X LP)}
+			   {Send PortGUI lifeUpdate(X LP)}
+			   if Life.X == 0 then
 			       %The player X is dead
-			   {Sender sayDeath(X)}
+			      {Sender sayDeath(X)}
+			   end
+			   N = {Launch X+1 {PersonalNewRecord L X LP}}
 			end
+			N ={Launch X+1 L}
 		     end
-		  end	  
+		  end
+	       in
+		  NewLife = {Launch 1 Life}	       
+		     
 
 		%The case of KindFire is a drone(row)
 	       [] drone(row X) then
@@ -220,26 +251,38 @@ in
 	 end
 
 	 %explode mine |8|
-	 local Id Mine Msg in
-	    {Send PortPlayers.ActualP fireMine(Id Mine)}
+      local Id Mine MsgR in
+	    MsgR = {MakeRecord msg {BuildList 1 Input.nbPlayer}}
 	    {Wait Id}
 	    if {Value.isDet Mine} then
 	       if (Mine \= nil) then
 		   %say to each player that a mine explode
-		  for X in 1..Input.nbPlayer do
-		     {Send PortPlayers.X sayMineExplode(ActualP Mine Msg)}
+		  fun{Explode X L}
+		     LP N
+		  in
+		     {Send PortPlayers.X sayMineExplode(ActualP Mine MsgR.X)}
 			%check the response of the player X
-		     if Msg > 0 then
+		     if MsgR.X > 0 then
 			   %the player X lost life point
-			Life.X = {Max 0 Life.X-Msg}
-			{Sender sayDamageTaken(X Msg Life.X)}
-			{Send PortGUI lifeUpdate(X Life.X)}
-			if Life.X == 0 then
+			LP = {Max 0 L.X-MsgR.X}
+			{Sender sayDamageTaken(X MsgR.X LP)}
+			{Send PortGUI lifeUpdate(X LP)}
+			if LP == 0 then
 			       %The player X is dead
 			   {Sender sayDeath(X)}
 			end
+			N ={Explode X+1 {PersonalNewRecord L X LP}}
 		     end
+		     N ={Explode X+1 L}
 		  end
+	       in
+		  
+		  if{Value.isDet NewLife} then
+		     NextLife = {Explode 1 NewLife}
+		  else
+		     NextLife = {Explode 1 Life}
+		  end
+		  
 	       end
 	       
 	    end
@@ -247,7 +290,14 @@ in
 	 end
 
 	 %finish |9|
-	 {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
+	    if{Value.isDet NextLife} then
+	       {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP NextLife TurnAtSurface}
+	    elseif {Value.isDet NewLife} then
+	       {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP NextLife TurnAtSurface}
+	    else	       
+	       {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
+	    end
+	    
       end
    end
    
