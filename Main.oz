@@ -5,6 +5,7 @@ import
    System
    PlayerManager
    Browser
+   OS
 define
    Browse=Browser.browse
    Show=System.show
@@ -20,10 +21,14 @@ define
    BuildList
    BuildTurnAtSurfaceCounter
    Sender
+   SimultaneousGame
+   ServerLife
+   PortLife
+   StartServerLife
 in
 
    % Retourne un Record contenant l'ensemble des ports associés aux joueurs
-   
+
    fun{SetPlayersPort KindP ColorP N}
       fun{FillRecord R KindP ColorP Id}
 	 case KindP|ColorP
@@ -89,9 +94,9 @@ in
 	 end
       end
    end
-   
 
-   
+
+
    fun{CheckEnd Tab}
       fun{CheckEndA T Pos Acc}
 	 A
@@ -115,20 +120,56 @@ in
       PNRSub = {Record.subtract R Feat}
       NewR = {AdjoinAt R Feat Val}
    end
-   
-   % Jeu tour par tour. S'arrete quand il ne reste plus qu'un joueur en vie 
+
+   fun{StartServerLife}
+      Stream
+      Port
+      Life
+      NumberInLife
+   in
+      {NewPort Stream Port}
+      Life = {BuildLifeRecord Input.nbPlayer}
+      NumberInLife = Input.nbPlayer
+      thread
+	 {ServerLife Stream Life NumberInLife}
+      end
+      Port
+   end
+   proc{ServerLife Msg Life NumberInLife}
+      case Msg of all(X)|T then
+	 X = NumberInLife
+	 {ServerLife T Life NumberInLife}
+      [] life(p:Actual l:Y)|T then
+	 Y = Life.Actual
+	 {ServerLife T Life NumberInLife}
+      [] long(L)|T then
+	 L = Life
+	 {ServerLife T Life NumberInLife}
+      [] newlife(p:X l:L)|T then
+	 if(L == 0) then
+	    {ServerLife T {PersonalNewRecord Life X L} NumberInLife-1}
+	 else
+	    {ServerLife T {PersonalNewRecord Life X L} NumberInLife}
+	 end
+
+
+      end
+   end
+
+
+   % Jeu tour par tour. S'arrete quand il ne reste plus qu'un joueur en vie
    proc{TurnByTurnGame ActualP MaxP Life TurnAtSurface}
-      
-      
+
+
       if {CheckEnd Life} then % End of the game
 	 {Browse Life}
 	 {Browse 'End Of The Game'}
       elseif Life.ActualP == 0 then % Le joueur est mort donc au suivant
 	 {Browse nextImDead}
-	 {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface} 
+	 {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
       else
 	 {Delay 600}
-	 % IMPLEMENTER UN TOUR 
+	 % IMPLEMENTER UN TOUR
 	 % Check if the submarine can play |1|
 
 	 local Id2 Ans2 in
@@ -182,20 +223,20 @@ in
 			   {Wait Id7}
 			   if {Value.isDet KindFire} then
 
-		              %The case of KindFire is a mine 
+		              %The case of KindFire is a mine
 			      case KindFire of mine(P) then
 				 {Sender sayMinePlaced(Id7) Life}
 				 {Send PortGUI putMine(Id7 P)}
 				 for X in 1..Input.nbPlayer do
 				    NewLife.X = Life.X
 				 end
-				 
+
 		              %The case of KindFire is a missile
 			      [] missile(P) then
 				 {Browse bOOM}
 		              %say to each player that a missil was launched
 
-				 
+
 				 for X in 1..Input.nbPlayer do
 				    local Msg in
 
@@ -210,12 +251,12 @@ in
 					     if NewLife.X > 0 then
 						{Send PortGUI lifeUpdate(IdPlayers.X NewLife.X)}
 					     end
-			
+
 					     if NewLife.X == 0 then
 			                     %The player X is dead
 						{Sender sayDeath(IdPlayers.X) Life}
 						{Browse missile|removePlayer|IdPlayers.X}
-					     
+
 						{Send PortGUI removePlayer(IdPlayers.X)}
 					     end
 					  else
@@ -224,46 +265,54 @@ in
 				       else
 					  NewLife.X=Life.X
 				       end
-				       
+
 				    end
-				 end	  
+				 end
 
 		              %The case of KindFire is a drone(row)
 			      [] drone(row X) then
-				 
+
 				 for X in 1..Input.nbPlayer do
 				    Id Ans
 				 in
 				    {Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
 				    {Wait Id}
-				    {Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
+				    if(Id \= null) then
+				       {Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
+				    end
+
 				    NewLife.X = Life.X
 				 end
 
 		              %The case of KindFire is a drone(column)
 			      [] drone(column Y) then
-				 
+
 				 for X in 1..Input.nbPlayer do
 				    Id Ans
 				 in
 				    {Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
 				    {Wait Id}
-				    {Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
+				    if(Id \= null) then
+				       {Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
+				    end
+
 				    NewLife.X=Life.X
 				 end
-				 
+
 		              %The case of KindFire is a sonar
 			      [] sonar then
-				 
+
 				 for X in 1..Input.nbPlayer do
 				    Id Ans
 				 in
 				    {Send PortPlayers.X sayPassingSonar(Id Ans)}
 				    {Wait Id}
-				    {Send PortPlayers.ActualP sayAnswerSonar(Id Ans)}
+				    if(Id \= null) then
+				       {Send PortPlayers.ActualP sayAnswerSonar(Id Ans)}
+				    end
 				    NewLife.X=Life.X
 				 end
-				 
+
 		              %The case of KindFire is null
 			      [] nil then
 				 for X in 1..Input.nbPlayer do
@@ -275,7 +324,7 @@ in
 
 	                %explode mine |8|
 			local Id8 Mine in
-			   
+
 			   {Send PortPlayers.ActualP fireMine(Id8 Mine)}
 			   {Wait Id8}
 			   if {Value.isDet Mine} then
@@ -311,27 +360,239 @@ in
 				       NewLifeAfterMine.X = NewLife.X
 				    end
 				 end
-				 
+
 			      else
 				 for X in 1..Input.nbPlayer do
 				    NewLifeAfterMine.X = NewLife.X
 				 end
 			      end
-	       
+
 			   end
-	    
+
 			end
 
 	                %finish |9|
 			{TurnByTurnGame ((ActualP mod MaxP)+1) MaxP NewLifeAfterMine TurnAtSurface}
 		     end
-		  end	     
+		  end
 	       end
 	    end
 	 end
       end
    end
-   
+
+   proc{SimultaneousGame ActualP MaxP}
+	 X Y Life
+      in
+      {Send PortLife all(X)} %nombre de joueur encore en vie
+      {Send PortLife long(Life)}
+	 {Send PortLife life(p:ActualP l:Y)} %vie du joueur actuel
+	 if  X == 1 then
+	    {Browse Life}
+	    {Browse 'End Of The Game'}
+	 elseif Y == 0 then
+	 %the player is dead
+	    {Browse iamDead}
+	 else
+	    local Id2 Ans2 in
+	    %check if the payer is on surface
+	       {Send PortPlayers.ActualP isSurface(Id2 Ans2)}
+	       if Ans2 then
+
+	       %say dive
+		  {Send PortPlayers.ActualP dive}
+		  {SimultaneousGame ActualP MaxP}
+	       else
+	       %simulate thinking |2|
+		  {Delay (({OS.rand} mod Input.thinkMin) + (Input.thinkMax-Input.thinkMin))}
+
+		  local Id3 Position3 Direction3 Life in
+		  %chose direction |3|
+
+		     {Send PortLife long(Life)}
+		     {Send PortPlayers.ActualP move(Id3 Position3 Direction3)}
+		     if Direction3 == surface then
+		     %time to wait at surface
+			{Delay Input.turnsurafce*1000}
+		     %say to other player |4|
+			{Sender saySurface(Id3) Life}
+		     %say to GUI
+			{Send PortGUI surface(Id3)}
+			{SimultaneousGame ActualP MaxP}
+		     else
+		     %say to other player the direction |5|
+			{Sender sayMove(Id3 Direction3) Life}
+		     %say to the GUI
+			{Send PortGUI movePlayer(Id3 Position3)}
+		     end % end if direction
+		  end%end local direction
+	       end% end if surface
+	    end % end local surface
+
+
+	       %simulate thinking |6|
+	    {Delay (({OS.rand} mod Input.thinkMin) + (Input.thinkMax-Input.thinkMin))}
+
+	       %Ask charge Item |7|
+	    local Id6 KindItem Life in
+	       {Send PortLife long(Life)}
+	       {Send PortPlayers.ActualP chargeItem(Id6 KindItem)}
+	       {Wait Id6}
+	       if {Value.isDet KindItem} then
+		  if KindItem \= nil then
+                        %say to other player that he charge
+		     {Sender sayCharge(Id6 KindItem) Life}
+		  end
+	       end
+	    end
+
+	       %simulate thinking |8|
+	    {Delay (({OS.rand} mod Input.thinkMin) + (Input.thinkMax-Input.thinkMin))}
+
+	       %Ask fire |9|
+	    local Id7 KindFire Msg Life in
+	       {Send PortLife long(Life)}
+	       {Send PortPlayers.ActualP fireItem(Id7 KindFire)}
+	       {Wait Id7}
+	       if {Value.isDet KindFire} then
+                     %The case of KindFire is a mine
+		  case KindFire of mine(P) then
+		     {Sender sayMinePlaced(Id7) Life}
+		     {Send PortGUI putMine(Id7 P)}
+
+		     %The case of KindFire is a missile
+		  [] missile(P) then
+		     {Browse bOOM}
+		              %say to each player that a missil was launched
+
+		     for X in 1..Input.nbPlayer do
+			local Msg Lifex Life NewLife in
+			      %check the response of the player X
+			   {Send PortLife life(p:X l:Lifex)}
+			   {Send PortLife long(Life)}
+			   if Lifex > 0 then
+			      {Send PortPlayers.X sayMissileExplode(Id7 P Msg)}
+			      if Msg \= nil then
+
+			            %the player X lost life point
+				 NewLife = {Max 0 Lifex-Msg}
+				 {Send PortLife newlife(p:X l:NewLife)}
+				 {Sender sayDamageTaken(IdPlayers.X Msg NewLife) Life}
+				 if NewLife > 0 then
+				    {Send PortGUI lifeUpdate(IdPlayers.X NewLife)}
+				 end
+
+				 if NewLife == 0 then
+			                     %The player X is dead
+				    {Sender sayDeath(IdPlayers.X) Life}
+				    {Browse missile|removePlayer|IdPlayers.X}
+
+				    {Send PortGUI removePlayer(IdPlayers.X)}
+				 end
+			      end
+			   end
+
+			end
+		     end
+
+		              %The case of KindFire is a drone(row)
+		  [] drone(row X) then
+
+		     for X in 1..Input.nbPlayer do
+			Id Ans
+		     in
+			{Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
+			{Wait Id}
+			if(Id \= null) then
+			   {Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
+			end
+
+		     end
+
+		              %The case of KindFire is a drone(column)
+		  [] drone(column Y) then
+
+		     for X in 1..Input.nbPlayer do
+			Id Ans
+		     in
+			{Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
+			{Wait Id}
+			if(Id \= null) then
+			   {Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
+			end
+
+		     end
+
+		              %The case of KindFire is a sonar
+		  [] sonar then
+
+		     for X in 1..Input.nbPlayer do
+			Id Ans
+		     in
+			{Send PortPlayers.X sayPassingSonar(Id Ans)}
+			{Wait Id}
+			if(Id \= null) then
+			   {Send PortPlayers.ActualP sayAnswerSonar(Id Ans)}
+			end
+		     end
+
+		              %The case of KindFire is null
+		  [] nil then skip
+		  end %end case kindfire
+	       end %end if det
+	    end % end local kindfire
+
+	       %simulate thinking |10|
+	    {Delay (({OS.rand} mod Input.thinkMin) + (Input.thinkMax-Input.thinkMin))}
+
+	       %explode mine |8|
+	    local Id8 Mine in
+
+	       {Send PortPlayers.ActualP fireMine(Id8 Mine)}
+	       {Wait Id8}
+	       if {Value.isDet Mine} then
+		  if (Mine \= nil) then
+		     {Send PortGUI removeMine(Id8 Mine)}
+                                 %say to each player that a mine explode
+		     for X in 1..Input.nbPlayer do
+			Msg Lifex Life NewLife
+		     in
+			      %check the response of the player X
+			{Send PortLife life(p:X l:Lifex)}
+			{Send PortLife long(Life)}
+			if Lifex > 0 then
+			   {Send PortPlayers.X sayMineExplode(Id8 Mine Msg)}
+		                       %check the response of the player X
+			   if Msg > 0 then
+			      {Browse lost_life_on_mine}
+			                  %the player X lost life point
+			      NewLife = {Max 0 NewLife.X-Msg}
+			      {Send PortLife newlife(p:X l:NewLife)}
+			      {Sender sayDamageTaken(IdPlayers.X Msg NewLife) Life}
+
+			      if NewLife > 0 then
+				 {Send PortGUI lifeUpdate(IdPlayers.X NewLife)}
+			      end
+
+			      if NewLife == 0 then
+			                     %The player X is dead
+				 {Sender sayDeath(IdPlayers.X) Life}
+				 {Browse removePlayer}
+				 {Send PortGUI removePlayer(IdPlayers.X)}
+			      end
+			   end
+			end
+		     end
+		  end
+
+	       end
+	    end %end local mine
+	    {SimultaneousGame ActualP MaxP}
+
+	 end %end if alife
+      end%end proc
+
+
    % Creation du Port vers le GUI et affichage de la fenetre
    PortGUI = {GUI.portWindow}
    {Send PortGUI buildWindow}
@@ -350,22 +611,29 @@ in
 	 {Send PortGUI initPlayer(Id Pos)}
       end
    end
-   
-   
+
+
    {Browse begin}
    if Input.isTurnByTurn then
       {Delay 3000}
       {TurnByTurnGame 1 Input.nbPlayer {BuildLifeRecord Input.nbPlayer} {BuildTurnAtSurfaceCounter Input.nbPlayer}}
    else
-      skip
+      {Delay 3000}
+      PortLife = {StartServerLife}
+      for X in 1..Input.nbPlayer do
+	 thread {SimultaneousGame X Input.nbPlayer} end
+      end
+
    end
 
-   for U in 1..Input.nbPlayer do
-      {Send PortPlayers.U nil}
-   end
 
-   {Send PortGUI nil}
-   {Delay 4000}
-   
-   {Browse 'the END'}
-end
+   {Delay 1000000}
+      for U in 1..Input.nbPlayer do
+	 {Send PortPlayers.U nil}
+      end
+
+      {Send PortGUI nil}
+      {Delay 4000}
+
+      {Browse 'the END'}
+   end
