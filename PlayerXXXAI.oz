@@ -386,7 +386,7 @@ in
 	 X Y
       in
 	  %random choice of wrong coordonate
-	 if({OS.rand} mod 2) ==0 then
+	 if({OS.rand} mod 2) == 0 then
 	    X=({OS.rand} mod Input.nRow)+1
 	    Y = ListPosition.1.y
 	 else

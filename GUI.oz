@@ -2,13 +2,14 @@ functor
 import
    QTk at 'x-oz://system/wp/QTk.ozf'
    Input
+   Browser
 export
    portWindow:StartWindow
 define
    
    StartWindow
    TreatStream
-   
+   Browse = Browser.browse
    RemoveItem
    RemovePath
    RemovePlayer
@@ -152,11 +153,13 @@ in
 
    local
       fun{RmMine Grid Position List}
+	 {Browse rm|List}
 	 case List
 	 of nil then nil
 	 [] H|T then
-	    if (H == Position) then
-	       {RemoveItem Grid H}
+	    {Browse H.2}
+	    if (H.2 == Position) then
+	       {RemoveItem Grid H.1}
 	       T
 	    else
 	       H|{RmMine Grid Position T}
@@ -223,11 +226,14 @@ in
 
 
    fun{RemovePlayer Grid WantedID State}
+      {Browse hello}
       case State
       of nil then nil
       [] guiPlayer(id:ID score:HandleScore submarine:Handle mines:M path:P)|Next then
-	 {HandleScore set(0)}
-	 if (ID == WantedID) then
+	 {Browse ID|WantedID}
+	 if (ID.id == WantedID.id) then
+	    {Browse ok}
+	    {HandleScore set(0)}
 	    for H in P do
 	       {RemoveItem Grid H}
 	    end
@@ -267,6 +273,7 @@ in
       [] movePlayer(ID Position)|T then
 	 {TreatStream T Grid {StateModification Grid ID State {MoveSubmarine Position}}}
       [] lifeUpdate(ID Life)|T then
+	 {Browse wtf}
 	 {TreatStream T Grid {StateModification Grid ID State {UpdateLife Life}}}
 	 {TreatStream T Grid State}
       [] putMine(ID Position)|T then 
@@ -287,4 +294,8 @@ in
 	 {TreatStream T Grid State}
       end
    end
+   
+  
+
+   
 end

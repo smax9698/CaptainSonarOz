@@ -47,13 +47,19 @@ in
 
 %%%% Description of the map %%%%
    
-   NRow = 4
-   NColumn = 4
+   NRow = 5
+   NColumn = 5
 
-   Map=[[1 0 0 1]
-	[0 0 0 1]
-	[0 0 0 1]
-	[1 0 0 1]]
+   % Map = [[0 0 0]
+   % 	  [0 0 0]
+   %      [0 0 0]]
+
+   Map = [[0 0 0 0 1]
+	  [1 0 0 0 0]
+	  [1 0 0 0 1]
+	  [1 0 1 0 1]
+	  [1 0 0 0 1]]
+   
    % Map = [[1 0 0 0 0 0 0 0 0 0]
    % 	  [0 0 0 0 0 0 0 0 0 0]
    % 	  [0 0 0 1 1 0 0 0 0 0]
@@ -82,7 +88,7 @@ in
 
 %%%% Life %%%%
 
-   MaxDamage = 1
+   MaxDamage = 4
 
 %%%% Number of load for each item %%%%
    

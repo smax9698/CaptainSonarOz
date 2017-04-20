@@ -1,7 +1,0 @@
-#!/bin/bash
-ozc -c ./Input.oz
-ozc -c ./PlayerManager.oz
-ozc -c ./PlayerXXXMyCustomName.oz
-ozc -c ./GUI.oz
-ozc -c ./Main.oz
-ozengine ./Main.ozf
