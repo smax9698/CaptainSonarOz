@@ -25,6 +25,7 @@ define
    ServerLife
    PortLife
    StartServerLife
+   End
 in
 
    % Retourne un Record contenant l'ensemble des ports associés aux joueurs
@@ -273,7 +274,7 @@ in
 				 in
 				    {Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
 				    {Wait Id}
-				    if(Id \= null) then
+				    if(Id \= nil) then
 				       {Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
 				    end
 
@@ -288,7 +289,7 @@ in
 				 in
 				    {Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
 				    {Wait Id}
-				    if(Id \= null) then
+				    if(Id \= nil) then
 				       {Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
 				    end
 
@@ -303,7 +304,7 @@ in
 				 in
 				    {Send PortPlayers.X sayPassingSonar(Id Ans)}
 				    {Wait Id}
-				    if(Id \= null) then
+				    if(Id \= nil) then
 				       {Send PortPlayers.ActualP sayAnswerSonar(Id Ans)}
 				    end
 				    NewLife.X=Life.X
@@ -387,6 +388,7 @@ in
 	 {Browse 'End Of The Game'}
       elseif Y == 0 then
 	 %the player is dead
+	 End.ActualP = 0
 	 {Browse iamDead}
       else
 	 local Id2 Ans2 in
@@ -408,7 +410,7 @@ in
 		  {Send PortPlayers.ActualP move(Id3 Position3 Direction3)}
 		  if Direction3 == surface then
 		     %time to wait at surface
-		     {Delay Input.turnsurafce*1000}
+		     {Delay Input.turnSurface*1000}
 		     %say to other player |4|
 		     {Sender saySurface(Id3) Life}
 		     %say to GUI
@@ -494,12 +496,13 @@ in
 	       [] drone(row X) then
 
 		  for X in 1..Input.nbPlayer do
-		     Id Ans
-		  in
-		     {Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
-		     {Wait Id}
-		     if(Id \= null) then
-			{Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
+		     local Id Ans
+		     in
+			{Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
+			{Wait Id}
+			if(Id \= nil) then
+			   {Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
+			end
 		     end
 
 		  end
@@ -508,12 +511,13 @@ in
 	       [] drone(column Y) then
 
 		  for X in 1..Input.nbPlayer do
-		     Id Ans
-		  in
-		     {Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
-		     {Wait Id}
-		     if(Id \= null) then
-			{Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
+		     local Id Ans
+		     in
+			{Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
+			{Wait Id}
+			if(Id \= nil) then
+			   {Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
+			end
 		     end
 
 		  end
@@ -522,12 +526,13 @@ in
 	       [] sonar then
 
 		  for X in 1..Input.nbPlayer do
-		     Id Ans
-		  in
-		     {Send PortPlayers.X sayPassingSonar(Id Ans)}
-		     {Wait Id}
-		     if(Id \= null) then
-			{Send PortPlayers.ActualP sayAnswerSonar(Id Ans)}
+		     local Id Ans
+		     in
+			{Send PortPlayers.X sayPassingSonar(Id Ans)}
+			{Wait Id}
+			if(Id \= nil) then
+			   {Send PortPlayers.ActualP sayAnswerSonar(Id Ans)}
+			end
 		     end
 		  end
 
@@ -550,37 +555,41 @@ in
 		  {Send PortGUI removeMine(Id8 Mine)}
                                  %say to each player that a mine explode
 		  for X in 1..Input.nbPlayer do
-		     Msg Lifex Life NewLife
-		  in
+		     local  Msg Lifex Life NewLife  in
 			      %check the response of the player X
-		     {Send PortLife life(p:X l:Lifex)}
-		     {Send PortLife long(Life)}
-		     if Lifex > 0 then
-			{Send PortPlayers.X sayMineExplode(Id8 Mine Msg)}
+			{Send PortLife life(p:X l:Lifex)}
+			{Send PortLife long(Life)}
+			{Wait Lifex}
+			{Wait Life}
+			if Lifex > 0 then
+			   {Send PortPlayers.X sayMineExplode(Id8 Mine Msg)}
 		                       %check the response of the player X
-			if Msg > 0 then
-			   {Browse lost_life_on_mine}
+			   {Wait Msg}
+			   {Browse Msg}
+			   if Msg \=nil then
+			      {Browse lost_life_on_mine}
 			                  %the player X lost life point
-			   NewLife = {Max 0 NewLife.X-Msg}
-			   {Send PortLife newlife(p:X l:NewLife)}
-			   {Sender sayDamageTaken(IdPlayers.X Msg NewLife) Life}
+			      NewLife = {Max 0 Lifex-Msg}
+			      {Send PortLife newlife(p:X l:NewLife)}
+			      {Sender sayDamageTaken(IdPlayers.X Msg NewLife) Life}
 
-			   if NewLife > 0 then
-			      {Send PortGUI lifeUpdate(IdPlayers.X NewLife)}
-			   end
+			      if NewLife > 0 then
+				 {Send PortGUI lifeUpdate(IdPlayers.X NewLife)}
+			      end
 
-			   if NewLife == 0 then
+			      if NewLife == 0 then
 			                     %The player X is dead
-			      {Sender sayDeath(IdPlayers.X) Life}
-			      {Browse removePlayer}
-			      {Send PortGUI removePlayer(IdPlayers.X)}
-			   end
-			end
-		     end
-		  end
-	       end
+				 {Sender sayDeath(IdPlayers.X) Life}
+				 {Browse removePlayer}
+				 {Send PortGUI removePlayer(IdPlayers.X)}
+			      end
+			   end % end if Msg
+			end %end if lifex
+		     end %end local for
+		  end %end for
+	       end %end min\ nil
 
-	    end
+	    end %end isdet
 	 end %end local mine
 	 {SimultaneousGame ActualP MaxP}
 
@@ -615,8 +624,13 @@ in
    else
       {Delay 3000}
       PortLife = {StartServerLife}
+      End = {MakeRecord endlist {BuildList 1 Input.nbPlayer}}
       for X in 1..Input.nbPlayer do
 	 thread {SimultaneousGame X Input.nbPlayer} end
+      end
+
+      for X in 1.. Input.nbPlayer do
+	 {Wait End.X}
       end
 
    end

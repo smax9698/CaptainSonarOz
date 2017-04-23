@@ -56,7 +56,7 @@ in
 	 end
       end
    end
-   
+
    fun{MapGenerator X Y Density}
       if X == 0 then nil
       else
@@ -65,11 +65,11 @@ in
    end
 
 %%%% Style of game %%%%
-   
-   IsTurnByTurn = true
+
+   IsTurnByTurn = false
 
 %%%% Description of the map %%%%
-   
+
    NRow = 9
    NColumn = 9
 
@@ -82,22 +82,22 @@ in
    % 	  [1 0 0 0 1]
    % 	  [1 0 1 0 1]
    % 	  [1 0 0 0 1]]
-   
+
    Map = {MapGenerator NRow NColumn 15}
 
 %%%% Players description %%%%
-   
+
    NbPlayer = 4
    Players = [advancedAI advancedAI basicAI basicAI]
    Colors = [green yellow red blue]
 
 %%%% Thinking parameters (only in simultaneous) %%%%
-   
-   ThinkMin = 500
-   ThinkMax = 3000
+
+   ThinkMin = 50
+   ThinkMax = 300
 
 %%%% Surface time/turns %%%%
-   
+
    TurnSurface = 3
 
 %%%% Life %%%%
@@ -105,19 +105,19 @@ in
    MaxDamage = 4
 
 %%%% Number of load for each item %%%%
-   
+
    Missile = 2
    Mine = 2
    Sonar = 2
    Drone = 2
 
 %%%% Distances of placement %%%%
-   
+
    MinDistanceMine = 1
    MaxDistanceMine = 2
    MinDistanceMissile = 1
    MaxDistanceMissile = 4
 
 
-   
+
 end
