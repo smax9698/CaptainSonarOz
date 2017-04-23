@@ -35,29 +35,46 @@ define
    StateModification
 
    UpdateLife
-in
 
+   FontPath
+   
+   SubmarineImg
+   WaterImg
+   MineImg
+   TerreImg
+
+   W
+   H
+in
+   W=65
+   H=65
+   SubmarineImg = {QTk.newImage photo(file:'img/submarine.gif' width:W height:H format:gif)}
+   WaterImg = {QTk.newImage photo(file:'img/mer.gif' width:W height:H format:gif)}
+   TerreImg = {QTk.newImage photo(file:'img/sol.gif' width:W height:H format:gif)}
+   MineImg = {QTk.newImage photo(file:'img/mine2.gif' width:W height:H format:gif)}
+   FontPath = {QTk.newFont font(size:4)}
+   
 %%%%% Build the initial window and set it up (call only once)
    fun{BuildWindow}
       Grid GridScore Toolbar Desc DescScore Window
    in
       Toolbar=lr(glue:we tbbutton(text:"Quit" glue:w action:toplevel#close))
-      Desc=grid(handle:Grid height:500 width:500)
+      Desc=grid(handle:Grid height:((NRow+1)*H) width:((NColumn+1)*W))
       DescScore=grid(handle:GridScore height:100 width:500)
       Window={QTk.build td(Toolbar Desc DescScore)}
   
       {Window show}
 
       % configure rows and set headers
-      {Grid rowconfigure(1 minsize:50 weight:0 pad:5)}
+      {Grid rowconfigure(1 minsize:H weight:0 pad:0)}
       for N in 1..NRow do
-	 {Grid rowconfigure(N+1 minsize:50 weight:0 pad:5)}
+	 {Grid rowconfigure(N+1 minsize:H weight:0 pad:0)}
 	 {Grid configure({Label N} row:N+1 column:1 sticky:wesn)}
       end
       % configure columns and set headers
-      {Grid columnconfigure(1 minsize:50 weight:0 pad:5)}
+      {Grid columnconfigure(1 minsize:W weight:0 pad:0)}
       for N in 1..NColumn do
-	 {Grid columnconfigure(N+1 minsize:50 weight:0 pad:5)}
+	 {Grid columnconfigure(N+1 minsize:W weight:0 pad:0)}
 	 {Grid configure({Label N} row:1 column:N+1 sticky:wesn)}
       end
       % configure scoreboard
@@ -73,13 +90,13 @@ in
 
    
 %%%%% Squares of water and island
-   Squares = square(0:label(text:"" width:1 height:1 bg:c(102 102 255))
-		    1:label(text:"" borderwidth:5 relief:raised width:1 height:1 bg:c(153 76 0))
+   Squares = square(0:label(width:1 height:1 image:WaterImg)
+		    1:label(width:1 height:1 relief:raised borderwidth:5 image:TerreImg bg:c(76 43 24))
 		   )
 
 %%%%% Labels for rows and columns
    fun{Label V}
-      label(text:V borderwidth:5 relief:raised bg:c(255 51 51) ipadx:5 ipady:5)
+      label(text:V borderwidth:5 relief:raised bg:c(24 83 178) ipadx:0 ipady:0)
    end
    
 %%%%% Function to draw the map
@@ -111,7 +128,8 @@ in
       pt(x:X y:Y) = Position
       id(id:Id color:Color name:_) = ID
       
-      LabelSub = label(text:"S" handle:Handle borderwidth:5 relief:raised bg:Color ipadx:5 ipady:5)
+      LabelSub = label(handle:Handle width:1 height:1 image:SubmarineImg bg:Color)
+      
       LabelScore = label(text:Input.maxDamage borderwidth:5 handle:HandleScore relief:solid bg:Color ipadx:5 ipady:5)
       HandlePath = {DrawPath Grid Color X Y}
       {Grid.grid configure(LabelSub row:X+1 column:Y+1 sticky:wesn)}
@@ -143,7 +161,7 @@ in
       in
 	 guiPlayer(id:ID score:HandleScore submarine:Handle mines:Mine path:Path) = State
 	 pt(x:X y:Y) = Position
-	 LabelMine = label(text:"M" handle:HandleMine borderwidth:5 relief:raised bg:ID.color ipadx:5 ipady:5)
+	 LabelMine = label(handle:HandleMine width:60 height:60 bg:ID.color image:MineImg)
 	 {Grid.grid configure(LabelMine row:X+1 column:Y+1)}
 	 {HandleMine 'raise'()}
 	 {Handle 'raise'()}
@@ -153,11 +171,9 @@ in
 
    local
       fun{RmMine Grid Position List}
-	 {Browse rm|List}
 	 case List
 	 of nil then nil
 	 [] H|T then
-	    {Browse H.2}
 	    if (H.2 == Position) then
 	       {RemoveItem Grid H.1}
 	       T
@@ -181,7 +197,7 @@ in
    fun{DrawPath Grid Color X Y}
       Handle LabelPath
    in
-      LabelPath = label(text:"" handle:Handle bg:Color)
+      LabelPath = label(text:" " font:FontPath handle:Handle bg:Color)
       {Grid.grid configure(LabelPath row:X+1 column:Y+1)}
       Handle
    end
@@ -226,21 +242,19 @@ in
 
 
    fun{RemovePlayer Grid WantedID State}
-      {Browse hello}
       case State
       of nil then nil
       [] guiPlayer(id:ID score:HandleScore submarine:Handle mines:M path:P)|Next then
-	 {Browse ID|WantedID}
 	 if (ID.id == WantedID.id) then
-	    {Browse ok}
 	    {HandleScore set(0)}
+	    {RemoveItem Grid Handle}
 	    for H in P do
 	       {RemoveItem Grid H}
 	    end
 	    for H in M do
 	       {RemoveItem Grid H.1}
 	    end
-	    {RemoveItem Grid Handle}
+	    
 	    Next
 	 else
 	    State.1|{RemovePlayer Grid WantedID Next}
@@ -273,7 +287,6 @@ in
       [] movePlayer(ID Position)|T then
 	 {TreatStream T Grid {StateModification Grid ID State {MoveSubmarine Position}}}
       [] lifeUpdate(ID Life)|T then
-	 {Browse wtf}
 	 {TreatStream T Grid {StateModification Grid ID State {UpdateLife Life}}}
 	 {TreatStream T Grid State}
       [] putMine(ID Position)|T then 
@@ -294,8 +307,5 @@ in
 	 {TreatStream T Grid State}
       end
    end
-   
-  
-
-   
+      
 end

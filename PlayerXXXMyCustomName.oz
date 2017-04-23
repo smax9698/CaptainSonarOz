@@ -237,7 +237,6 @@ in
    fun{ExplodeMine ListMine Pos}
       case ListMine
       of H|T then
-	 {Browse {Dist H Pos}}
 	 if {Dist H Pos} >= 2 then
 	    H
 	 else {ExplodeMine T Pos}
@@ -314,7 +313,6 @@ in
       [] fireMine(ID Mine)|T then
 	 Mine={ExplodeMine ListMine ListPosition.1}
 	 ID=Id
-	 {Browse ListMine|{Width ListMine}}
 	 if Mine == nil then
 	    {TreatStream T Id Arme Surface ListPosition ListMine}
 	 else
@@ -359,7 +357,7 @@ in
 	 case Pos of pt(x:X y:Y) then
 	    Distance = ({Abs X-ListPosition.1.x} + {Abs Y-ListPosition.1.y})
 	    if(Distance>=2) then
-	       Message =0
+	       Message = nil
 	    elseif(Distance==1) then
 	       Message = 1
 	    else

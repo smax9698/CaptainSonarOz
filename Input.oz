@@ -1,4 +1,6 @@
 functor
+import
+   OS
 export
    isTurnByTurn:IsTurnByTurn
    nRow:NRow
@@ -19,7 +21,10 @@ export
    maxDistanceMine:MaxDistanceMine
    minDistanceMissile:MinDistanceMissile
    maxDistanceMissile:MaxDistanceMissile
+   mapGenerator:MapGenerator
 define
+   MapGenerator
+   LineGenerator
    IsTurnByTurn
    NRow
    NColumn
@@ -41,40 +46,49 @@ define
    MaxDistanceMissile
 in
 
+   fun {LineGenerator Y Density}
+      if Y==0 then nil
+      else
+	 if {OS.rand} mod 100 < Density then
+	    1|{LineGenerator Y-1 Density}
+	 else
+	    0|{LineGenerator Y-1 Density}
+	 end
+      end
+   end
+   
+   fun{MapGenerator X Y Density}
+      if X == 0 then nil
+      else
+	 {LineGenerator Y Density}|{MapGenerator X-1 Y Density}
+      end
+   end
+
 %%%% Style of game %%%%
    
    IsTurnByTurn = true
 
 %%%% Description of the map %%%%
    
-   NRow = 5
-   NColumn = 5
+   NRow = 9
+   NColumn = 9
 
    % Map = [[0 0 0]
    % 	  [0 0 0]
    %      [0 0 0]]
 
-   Map = [[0 0 0 0 1]
-	  [1 0 0 0 0]
-	  [1 0 0 0 1]
-	  [1 0 1 0 1]
-	  [1 0 0 0 1]]
+   % Map = [[0 0 0 0 1]
+   % 	  [1 0 0 0 0]
+   % 	  [1 0 0 0 1]
+   % 	  [1 0 1 0 1]
+   % 	  [1 0 0 0 1]]
    
-   % Map = [[1 0 0 0 0 0 0 0 0 0]
-   % 	  [0 0 0 0 0 0 0 0 0 0]
-   % 	  [0 0 0 1 1 0 0 0 0 0]
-   % 	  [0 0 1 1 0 0 1 0 0 0]
-   % 	  [0 0 0 0 0 0 0 0 0 0]
-   % 	  [0 0 0 0 0 0 0 0 0 0]
-   % 	  [0 0 0 1 0 0 1 1 0 0]
-   % 	  [0 0 1 1 0 0 1 0 0 0]
-   % 	  [0 0 0 0 0 0 0 0 0 0]
-   % 	  [0 0 0 0 0 0 0 0 0 0]]
+   Map = {MapGenerator NRow NColumn 15}
 
 %%%% Players description %%%%
    
    NbPlayer = 4
-   Players = [basicAI basicAI basicAI basicAI]
+   Players = [advancedAI advancedAI basicAI basicAI]
    Colors = [green yellow red blue]
 
 %%%% Thinking parameters (only in simultaneous) %%%%
