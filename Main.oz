@@ -29,7 +29,6 @@ define
 in
 
    % Retourne un Record contenant l'ensemble des ports associés aux joueurs
-
    fun{SetPlayersPort KindP ColorP N}
       fun{FillRecord R KindP ColorP Id}
 	 case KindP|ColorP
@@ -54,6 +53,7 @@ in
       {FillRecord {MakeRecord idPlayer {BuildList 1 N}} ColorP 1}
    end
 
+   %construit une liste de A à Max A|...|max|nil
    fun{BuildList A Max}
       if A == Max then Max|nil
       else
@@ -61,6 +61,7 @@ in
       end
    end
 
+   %construit un record life(1:maxdammage ...) avec NbPlayer champs initialisé à maxDammage
    fun{BuildLifeRecord NbPlayer}
       Life
    in
@@ -74,6 +75,7 @@ in
       end
    end
 
+   %construit un record life(1:turnSurface ...) avec NbPlayer champs initialisé à turnSurface
    fun{BuildTurnAtSurfaceCounter NbPlayer}
       Turn
    in
@@ -97,7 +99,7 @@ in
    end
 
 
-
+   %revoie true s'il n'y a plus qu'un joueur vivant
    fun{CheckEnd Tab}
       fun{CheckEndA T Pos Acc}
 	 A
@@ -115,6 +117,7 @@ in
       {CheckEndA Tab 1 0}
    end
 
+   %renvoie un nouveau record à partir de R ou la valeur contenue en Feat est remplacée par Val
    fun{PersonalNewRecord R Feat Val}
       PNRSub NewR
    in
@@ -122,6 +125,7 @@ in
       NewR = {AdjoinAt R Feat Val}
    end
 
+   %Démare le serverLife (utile dans la version simultanée)
    fun{StartServerLife}
       Stream
       Port
@@ -136,6 +140,9 @@ in
       end
       Port
    end
+
+   %ServerLife (utile dans la version simultanée)
+   %Il reçoit les mise à jour des points de vie ainsi que les demandes d'état de la vie des joueurs
    proc{ServerLife Msg Life NumberInLife}
       case Msg of all(X)|T then
 	 X = NumberInLife
@@ -377,6 +384,8 @@ in
       end
    end
 
+
+   %version simultanée
    proc{SimultaneousGame ActualP MaxP}
       X Y Life
    in
@@ -619,9 +628,11 @@ in
 
    {Browse begin}
    if Input.isTurnByTurn then
+      %jeu tour par tour
       {Delay 3000}
       {TurnByTurnGame 1 Input.nbPlayer {BuildLifeRecord Input.nbPlayer} {BuildTurnAtSurfaceCounter Input.nbPlayer}}
    else
+      %jeu simultané
       {Delay 3000}
       PortLife = {StartServerLife}
       End = {MakeRecord endlist {BuildList 1 Input.nbPlayer}}
