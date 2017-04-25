@@ -168,7 +168,7 @@ in
 	 {Browse nextImDead}
 	 {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
       else
-	 {Delay 800}
+	 {Delay 300}
 	 % IMPLEMENTER UN TOUR
 	 % Check if the submarine can play |1|
 
@@ -334,7 +334,7 @@ in
 				       {Send PortPlayers.X sayMineExplode(Id8 Mine Msg)}
 		                       %check the response of the player X
 				       if Msg \= nil then
-					  {Browse lost_life_on_mine}
+	
 			                  %the player X lost life point
 					  NewLifeAfterMine.X = {Max 0 NewLife.X-Msg}
 					  {Sender sayDamageTaken(IdPlayers.X Msg NewLifeAfterMine.X) NewLife}
