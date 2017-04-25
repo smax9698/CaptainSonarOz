@@ -1,5 +1,5 @@
 functor
-import 
+import
    Input
    OS
    Browser
@@ -58,7 +58,7 @@ in
       Rep
    in
       if X < 1 orelse X  > Input.nRow then % verifie que la case est dans la carte
-	 Rep=false 
+	 Rep=false
       elseif Y < 1 orelse Y > Input.nColumn then % verifie que la case est dans la carte
 	 Rep=false
       else % la case est dans la carte
@@ -67,7 +67,7 @@ in
       Rep
    end
 
-    
+
     % Renvoie true si NewPos est dans la liste des positions et false sinon
    fun{CheckList List NewPos}
       case List of pt(x:X y:Y)|T then
@@ -84,7 +84,7 @@ in
    fun{RandPosWater}
       X Y
    in
-      X=({OS.rand} mod Input.nRow)+1 
+      X=({OS.rand} mod Input.nRow)+1
       Y=({OS.rand} mod Input.nColumn)+1
       if {CheckPosition X Y} then pt(x:X y:Y)
       else
@@ -92,7 +92,7 @@ in
       end
    end
 
-    % Retourne la direction choisie de facon aléatoire. Si aucune direction n'est possible 
+    % Retourne la direction choisie de facon aléatoire. Si aucune direction n'est possible
    fun{ChooseRandDirection ListPos}
       R Dir
    in
@@ -131,12 +131,12 @@ in
 	 end
       end
       Dir
-   end  
+   end
 
     % On charge une arme de facon aleatoire et on retourne un nouveau record arme
    fun{ChargeItemRand ArmeRecord}
       R ArmeRecordSub NewArmeRecord
-   in 
+   in
       R = ({OS.rand} mod 4) + 1
 
       if R == 1 then % missile
@@ -157,7 +157,7 @@ in
       NewArmeRecord
 
    end
-      
+
 
    % Determine si une arme a ete crée
    fun{NewItem OldItem NewIt}
@@ -184,13 +184,13 @@ in
       S = ({OS.rand} mod Max) + Min
       X = (S - {OS.rand} mod (S+1)) * {Pow ~1 ({OS.rand} mod 2 + 1)}
       Y = (S - {Abs X}) * {Pow ~1 ({OS.rand} mod 2 + 1)}
-      
+
       if {CheckPosition Position.x+X Position.y+Y} then
 	 pt(x:(Position.x+X) y:(Position.y+Y))
       else
 	 {FindPlaceForFire Min Max Position}
       end
-      
+
    end
 
    % Modifie un champ d'un record en retournant un nouveau record qui est une copie modifiée du record initial
@@ -210,13 +210,13 @@ in
       [] drone(column Y) then {PersonalNewRecord Arme drone Arme.drone-Input.drone}
       [] mine(pt(x:X y:Y)) then {PersonalNewRecord Arme mine Arme.mine-Input.mine}
       else Arme
-      end	 
+      end
    end
 
    fun{Dist Pt1 Pt2}
       {Abs Pt1.x-Pt2.x} + {Abs Pt1.y-Pt2.y}
    end
-   
+
    % Dès qu'une arme est chargée, on la choisit.
    fun{ChooseFire Arme Position}
       Fire
@@ -256,8 +256,8 @@ in
       [] nil then nil
       end
    end
-   
-  
+
+
    proc{TreatStream Stream Id Arme Surface ListPosition ListMine} % has as many parameters as you want
       NewArme
    in
@@ -283,7 +283,7 @@ in
       [] move(ID Pos Dir)|T then
 	 Dir = {ChooseRandDirection ListPosition}
 	 if Dir == west then Pos = pt(x:ListPosition.1.x y:(ListPosition.1.y-1))
-	 elseif Dir == east then Pos = pt(x:ListPosition.1.x y:(ListPosition.1.y+1)) 
+	 elseif Dir == east then Pos = pt(x:ListPosition.1.x y:(ListPosition.1.y+1))
 	 elseif Dir == south then Pos = pt(x:(ListPosition.1.x+1) y:ListPosition.1.y)
 	 elseif Dir == north then Pos = pt(x:(ListPosition.1.x-1) y:ListPosition.1.y)
 	 else Pos = ListPosition.1
@@ -318,17 +318,17 @@ in
 	 else
 	    {TreatStream T Id Arme Surface ListPosition {DeleteMine ListMine Mine}}
 	 end
-	 
+
       [] sayMove(ID Dir)|T then
 	 %{Browse 'The player'(ID 'move in derection'(Dir))}
 	 {TreatStream T Id Arme Surface ListPosition ListMine}
-	 
+
       [] saySurface(ID)|T then
 	 %{Browse 'The next player is at the surface'(ID)}
 	 {TreatStream T Id Arme Surface ListPosition ListMine}
       [] sayCharge(ID KindItem)|T then
 	 {TreatStream T Id Arme Surface ListPosition ListMine}
-	 
+
       [] sayMinePlaced(ID)|T then
 	 %{Browse 'The next player placed a mine'(ID)}
 	 {TreatStream T Id Arme Surface ListPosition ListMine}
@@ -349,7 +349,7 @@ in
 	    end
 	 end
 	 {TreatStream T Id Arme Surface ListPosition ListMine}
-	 
+
       [] sayMineExplode(ID Pos Message)|T then
 	 Distance
       in
@@ -357,7 +357,7 @@ in
 	 case Pos of pt(x:X y:Y) then
 	    Distance = ({Abs X-ListPosition.1.x} + {Abs Y-ListPosition.1.y})
 	    if(Distance>=2) then
-	       Message = nil
+	       Message = 0
 	    elseif(Distance==1) then
 	       Message = 1
 	    else
@@ -365,7 +365,7 @@ in
 	    end
 	 end
 	 {TreatStream T Id Arme Surface ListPosition ListMine}
-	 
+
       [] sayPassingDrone(Drone ID Ans)|T then
 	  %check if we are in the row or column of the drone
 	 case Drone of drone(row X) then
@@ -375,11 +375,11 @@ in
 	 end
 	 ID = Id
 	 {TreatStream T Id Arme Surface ListPosition ListMine}
-	 
+
       [] sayAnswerDrone(Drone ID Ans)|T then
-	 %{Browse 'The drone detect the player'(ID)}	  
+	 %{Browse 'The drone detect the player'(ID)}
 	 {TreatStream T Id Arme Surface ListPosition ListMine}
-	 
+
       [] sayPassingSonar(ID Ans)|T then
 	 X Y
       in
@@ -394,15 +394,15 @@ in
 	 Ans = pt(x:X y:Y)
 	 ID = Id
 	 {TreatStream T Id Arme Surface ListPosition ListMine}
-	 
+
       [] sayAnswerSonar(ID Ans)|T then
 	 %{Browse 'The sonar detect the player'(ID 'at position'(Ans))}
 	 {TreatStream T Id Arme Surface ListPosition ListMine}
-	 
+
       [] sayDeath(ID)|T then
 	 %{Browse 'The next player is dead'(ID)}
 	 {TreatStream T Id Arme Surface ListPosition ListMine}
-	 
+
       [] sayDamageTaken(ID Damage LifeLeft)|T then
 	 %{Browse 'Damage on player'(ID' number'(Damage) 'Lifeleft'(LifeLeft))}
 	 {TreatStream T Id Arme Surface ListPosition ListMine}
