@@ -66,7 +66,7 @@ in
 
 %%%% Style of game %%%%
 
-   IsTurnByTurn = false
+   IsTurnByTurn = true
 
 %%%% Description of the map %%%%
 
@@ -88,7 +88,7 @@ in
 %%%% Players description %%%%
 
    NbPlayer = 4
-   Players = [advancedAI basicAI basicAI basicAI]
+   Players = [basicAI basicAI advancedAI basicAI]
    Colors = [green yellow red blue]
 
 %%%% Thinking parameters (only in simultaneous) %%%%

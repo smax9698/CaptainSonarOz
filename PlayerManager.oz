@@ -2,6 +2,7 @@ functor
 import
    PlayerXXXMyCustomName
    PlayerXXXAI
+   PlayerAdvancedAI
 export
    playerGenerator:PlayerGenerator
 define
