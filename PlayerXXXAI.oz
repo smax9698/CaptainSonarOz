@@ -669,7 +669,7 @@ in
       NewArme
    in
       {Browse Stream.1}
-      {Delay 250}
+  
       case Stream
       of nil|T then skip
 	 % On chosit une position aléatoire correcte

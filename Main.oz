@@ -176,7 +176,7 @@ in
 	 {Browse nextImDead}
 	 {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
       else
-	 {Delay 300}
+	 
 	 % IMPLEMENTER UN TOUR
 	 % Check if the submarine can play |1|
 
