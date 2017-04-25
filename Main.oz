@@ -140,9 +140,6 @@ in
       end
       Port
    end
-
-   %ServerLife (utile dans la version simultanée)
-   %Il reçoit les mise à jour des points de vie ainsi que les demandes d'état de la vie des joueurs
    proc{ServerLife Msg Life NumberInLife}
       case Msg of all(X)|T then
 	 X = NumberInLife
@@ -384,8 +381,6 @@ in
       end
    end
 
-
-   %version simultanée
    proc{SimultaneousGame ActualP MaxP}
       X Y Life
    in
@@ -395,6 +390,7 @@ in
       if  X == 1 then
 	 {Browse Life}
 	 {Browse 'End Of The Game'}
+   End.ActualP = 0
       elseif Y == 0 then
 	 %the player is dead
 	 End.ActualP = 0
@@ -628,11 +624,9 @@ in
 
    {Browse begin}
    if Input.isTurnByTurn then
-      %jeu tour par tour
       {Delay 3000}
       {TurnByTurnGame 1 Input.nbPlayer {BuildLifeRecord Input.nbPlayer} {BuildTurnAtSurfaceCounter Input.nbPlayer}}
    else
-      %jeu simultané
       {Delay 3000}
       PortLife = {StartServerLife}
       End = {MakeRecord endlist {BuildList 1 Input.nbPlayer}}
