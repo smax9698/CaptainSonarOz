@@ -18,6 +18,7 @@ define
    ExplodeMine
    NewAdvPosSonar
    MoveAdv
+   PlayerNearMine
    NewAdvPosDrone
    PositionPlayerToTarget
    Dist
@@ -62,7 +63,7 @@ in
       {NewPort Stream Port}
       AdvPosition = {SetAdvRecord Input.nbPlayer ID}
       thread
-	 {TreatStream Stream id(id:ID color:Color name:ID) arme(missile:0 mine:0 sonar:0 drone:0) true nil nil AdvPosition Input.maxDamage}
+	 {TreatStream Stream id(id:ID color:Color name:ID) arme(missile:0 mine:0 sonar:0 drone:0) true nil nil AdvPosition Input.maxDamage nil}
       end
       Port
    end
@@ -374,18 +375,22 @@ in
    fun{ChargeItem ArmeRecord AdvStatus}
       R
    in
-      if {PlayerStatus AdvStatus nil} orelse {PlayerStatus AdvStatus firstGuess} then
-
+      % On charge deux sonar pour obtenir une première information sur les joueurs
+      if {PlayerStatus AdvStatus nil} orelse {PlayerStatus AdvStatus firstGuess} then 
 	 {PersonalNewRecord ArmeRecord sonar ArmeRecord.sonar+1}
+
+	 % Si on a seulement une coordonnée de correcte pour chaque joueur, on charge un sonar 1 fois sur 2 et un missile ou une mine 1 fois sur 2
       elseif ({PlayerStatus AdvStatus tracked} == false andthen {PlayerStatus AdvStatus double} == false) andthen ({PlayerStatus AdvStatus xRight} orelse {PlayerStatus AdvStatus yRight}) then
 	 R = {OS.rand} mod 4
-	 if R =< 1 then
+	 if R < 1 then
 	    {PersonalNewRecord ArmeRecord sonar ArmeRecord.sonar+1}
-	 elseif R == 2 then
+	 elseif R == 1 then
 	    {PersonalNewRecord ArmeRecord missile ArmeRecord.missile+1}
 	 else
 	    {PersonalNewRecord ArmeRecord mine ArmeRecord.mine+1}
 	 end
+
+	 % Si on a au moins un joueur avec deux positions possibles et pas de joueur 'tracked', on charge un drone la moitié du temps et un missile ou une mine l'autre moitié
       elseif ({PlayerStatus AdvStatus tracked} == false andthen {PlayerStatus AdvStatus double}) then
 	 R = {OS.rand} mod 4
 	 if R =< 1 then
@@ -395,6 +400,8 @@ in
 	 else
 	    {PersonalNewRecord ArmeRecord mine ArmeRecord.mine+1}
 	 end
+
+	 % Si au moins un joueur est 'tracked' on charge un missile 3 sur 8 fois, une mine 3 sur 8 fois et un sonar 2 sur 8 fois
       elseif ({PlayerStatus AdvStatus tracked} andthen ({PlayerStatus AdvStatus double} orelse {PlayerStatus AdvStatus xRight} orelse {PlayerStatus AdvStatus yRight})) then
 	 R = {OS.rand} mod 8
 	 if R =< 2 then
@@ -404,6 +411,7 @@ in
 	 else
 	    {PersonalNewRecord ArmeRecord sonar ArmeRecord.sonar+1}
 	 end
+	 % Si tous les joueurs sont 'tracked' on charge que des mines et des missiles
       elseif ({PlayerStatus AdvStatus tracked} andthen {PlayerStatus AdvStatus double} == false andthen ({PlayerStatus AdvStatus xRight} == false andthen {PlayerStatus AdvStatus yRight})) == false then
 	 R = {OS.rand} mod 2
 	 if R == 0 then
@@ -411,6 +419,7 @@ in
 	 else
 	    {PersonalNewRecord ArmeRecord mine ArmeRecord.mine+1}
 	 end
+	 % Si aucun de ces cas, on charge une des quatre armes de facon aléatoire
       else
 	 R = {OS.rand} mod 4
 	 if R == 0 then
@@ -505,6 +514,7 @@ in
       Pt
    end
 
+   
    fun{FireDrone AdvStatus}
       Drone
    in
@@ -539,8 +549,8 @@ in
       Fire
    in
 
+      % Si aucun joueur n'est 'tracked' ou 'double' on tire en priorité un sonar et sinon une mine
       if {PlayerStatus AdvSt tracked} == false andthen {PlayerStatus AdvSt double} == false then
-
 	 if Arme.sonar >= Input.sonar then
 	    Fire=sonar
 	 elseif Arme.mine >= Input.mine then
@@ -548,6 +558,8 @@ in
 	 else
 	    Fire=nil
 	 end
+
+	 % Si un joueur est 'double' mais qu'il n'y a pas de tracked, on tire en priorité un drone puis un sonar puis une mine
       elseif {PlayerStatus AdvSt tracked} == false andthen {PlayerStatus AdvSt double} then
 	 if Arme.drone >= Input.drone then
 	    Fire={FireDrone AdvSt}
@@ -558,6 +570,8 @@ in
 	 else
 	    Fire=nil
 	 end
+
+	 % Si un joueur est tracked, on regarde si on a un missile et si le joueur est atteignable. Si c'est le cas on tire le missile sinon on place une mine et finalement on utilise un sonar
       elseif {PlayerStatus AdvSt tracked} then
 	 Pt
       in
@@ -572,6 +586,7 @@ in
 	    Fire=nil
 	 end
       else
+	 % Si on est dans aucun de ces cas, on lance en priorité un sonar et sinon on place une mine
 	 if Arme.sonar >= Input.sonar then
 	    Fire=sonar
 	 elseif Arme.mine >= Input.mine then
@@ -583,6 +598,33 @@ in
       Fire
    end
 
+   fun{PlayerNearMine AdvSt Mine}
+      Ans
+   in
+      for I in 1..Input.nbPlayer break:U do
+	 case AdvSt.I
+	 of posType(xRight pt(x:Xr y:Yf)) then
+	    if Xr==Mine.x then
+	       Ans=I
+	       {U}
+	    end
+	 [] posType(yRight pt(x:Xf y:Yr)) then
+	    if Yr==Mine.y then
+	       Ans=I
+	       {U}
+	    end
+	 else
+	    skip
+	 end
+	 if I == Input.nbPlayer then
+	    Ans=0
+	    {U}
+	 end
+      end
+      Ans
+   end
+   
+
    fun{ExplodeMine ListMine Pos AdvSt}
       case ListMine
       of H|T then
@@ -590,11 +632,18 @@ in
       in
 	 Adv = {PositionPlayerToTarget 0 1 AdvSt H}
 	 if Adv \= nil andthen {Dist Pos H} > 1 then
-	    {Browse touchAdvMine}
-	    H
+
+	    explodeMine(minePlace:H playerId:0)
 	 else
-	    if {Dist Pos H}>1 andthen {OS.rand} mod 30000 == 0 then
-	       H
+	    PId
+	 in
+	    PId={PlayerNearMine AdvSt H}
+
+	    if {Dist Pos H}>1 andthen {OS.rand} mod 1 == 0 andthen PId > 0 then
+	       
+	       explodeMine(minePlace:H playerId:PId)
+	    elseif {Dist Pos H}>1 andthen {OS.rand} mod 12000 == 0 then
+	       explodeMine(minePlace:H playerId:0)
 	    else
 	       {ExplodeMine T Pos AdvSt}
 	    end
@@ -616,21 +665,23 @@ in
    end
    
   
-   proc{TreatStream Stream Id Arme Surface ListPosition ListMine AdvPosition MyLife} % has as many parameters as you want
+   proc{TreatStream Stream Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion} % has as many parameters as you want
       NewArme
    in
+      {Browse Stream.1}
+      {Delay 250}
       case Stream
       of nil|T then skip
 	 % On chosit une position aléatoire correcte
       [] initPosition(ID Pos)|T then Pos={RandPosWater} ID=Id
-	 {TreatStream T Id Arme Surface Pos|ListPosition ListMine AdvPosition MyLife}
+	 {TreatStream T Id Arme Surface Pos|ListPosition ListMine AdvPosition MyLife nil}
 
 	 % On met la variable Surface a false
       [] dive|T then
 	 case ListPosition of H|U then
-	    {TreatStream T Id Arme false H|nil ListMine AdvPosition MyLife}
+	    {TreatStream T Id Arme false H|nil ListMine AdvPosition MyLife nil}
 	 else
-	    {TreatStream T Id Arme false ListPosition ListMine AdvPosition MyLife}
+	    {TreatStream T Id Arme false ListPosition ListMine AdvPosition MyLife nil}
 	 end
 
 	 % On donne à Ans la valeur de la variable Surface
@@ -640,7 +691,7 @@ in
 	 else
 	    Ans=nil ID=nil
 	 end
-	 {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife}
+	 {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 
 	 % On fait appel à la fonction ChooseRandDirection et on modifie notre position en fonction du resultat
       [] move(ID Pos Dir)|T then
@@ -653,12 +704,12 @@ in
 	    else Pos = ListPosition.1
 	    end
 	    ID = Id
-	    {TreatStream T Id Arme (Dir==surface) Pos|ListPosition ListMine AdvPosition MyLife}
+	    {TreatStream T Id Arme (Dir==surface) Pos|ListPosition ListMine AdvPosition MyLife nil}
 	 else
 	    Dir = nil
 	    Pos = nil
 	    ID = nil
-	    {TreatStream T Id Arme (Dir==surface) ListPosition ListMine AdvPosition MyLife}
+	    {TreatStream T Id Arme (Dir==surface) ListPosition ListMine AdvPosition MyLife nil}
 	 end
 	 
 	 % On choisit une arme à charger et on indique si une nouvelle arme a été créée
@@ -666,50 +717,72 @@ in
 	 NewArme={ChargeItem Arme AdvPosition} % Nouveau record arme avec une arme ayant recu une charge supplémentaire
 	 KindItem = {NewItem Arme NewArme} % KindItem n'est pas nil si une nouvelle arme a été créée
 	 ID=Id
-	 {TreatStream T Id NewArme Surface ListPosition ListMine AdvPosition MyLife}
+	 {TreatStream T Id NewArme Surface ListPosition ListMine AdvPosition MyLife nil}
 
 	 % On choisit l'arme a utliser
       [] fireItem(ID KindFire)|T then
 	 KindFire={ChooseFire Arme ListPosition.1 AdvPosition} % KindFire n'est pas nil si une arme peut-être tirée
-	 % case KindFire of missile(pt(x:X y:Y)) then
-	 %    {Browse AdvPosition}
-	 %    {Browse missileExplode|KindFire}
-	 % else
-	 %    skip
-	 % end
+
 	 
 	 NewArme={FireArme Arme KindFire} % Nouveau record arme avec une arme utilisée et donc ayant perdu des charges
 	 ID=Id
 	 case KindFire of mine(P) then
-	    {TreatStream T Id NewArme Surface ListPosition P|ListMine AdvPosition MyLife}
+	    {TreatStream T Id NewArme Surface ListPosition P|ListMine AdvPosition MyLife nil}
 	 else
-	    {TreatStream T Id NewArme Surface ListPosition ListMine AdvPosition MyLife}
+	    {TreatStream T Id NewArme Surface ListPosition ListMine AdvPosition MyLife nil}
 	 end
 
 	 % On décide de faire exploser une mine si une mine est près d'un adversaire
       [] fireMine(ID Mine)|T then
-	 Mine={ExplodeMine ListMine ListPosition.1 AdvPosition}
+	 MineRec
+      in
+	 
+	 MineRec={ExplodeMine ListMine ListPosition.1 AdvPosition}
+	 if MineRec \=nil then
+	    
+	    Mine=MineRec.minePlace
+	 else
+	    Mine=nil
+	 end
+	 
 	 ID=Id
 	 if Mine == nil then
-	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife}
+	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 	 else
-	    {TreatStream T Id Arme Surface ListPosition {DeleteMine ListMine Mine} AdvPosition MyLife}
+	    {TreatStream T Id Arme Surface ListPosition {DeleteMine ListMine Mine} AdvPosition MyLife MineRec}
 	 end
 	 
       [] sayMove(ID Dir)|T then
 	 %{Browse 'The player'(ID 'move in derection'(Dir))}
-	 {TreatStream T Id Arme Surface ListPosition ListMine {MoveAdv AdvPosition ID Dir} MyLife}
+	 if ID.id == Id.id then
+	    {TreatStream T Id Arme Surface ListPosition ListMine {MoveAdv AdvPosition ID Dir} MyLife nil}
+	 else
+	    {TreatStream T Id Arme Surface ListPosition ListMine {MoveAdv AdvPosition ID Dir} MyLife LastMineExplosion}
+	 end
 	 
       [] saySurface(ID)|T then
 	 %{Browse 'The next player is at the surface'(ID)}
-	 {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife}
+	 if ID.id == Id.id then
+	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
+	 else
+	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
+	 end
+
 	 
       [] sayCharge(ID KindItem)|T then
-	 {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife}
+	 if ID.id == Id.id then
+	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
+	 else
+	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
+	 end
 	 
       [] sayMinePlaced(ID)|T then
 	 %{Browse 'The next player placed a mine'(ID)}
-	 {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife}
+	 if ID.id == Id.id then 
+	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
+	 else
+	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
+	 end
 
 	 % On determine si on est touché ou non par le missile
       [] sayMissileExplode(ID Pos Message)|T then
@@ -727,9 +800,9 @@ in
 	    end
 	 end
 	 if Message \= nil then
-	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition {Max MyLife-Message 0}}
+	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition {Max MyLife-Message 0} nil}
 	 else
-	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife}
+	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 	 end
 
 	 
@@ -747,11 +820,29 @@ in
 	       Message = 2
 	    end
 	 end
-	 if Message \= nil then
-	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition {Max MyLife-Message 0}}
+
+	 if LastMineExplosion \= nil then
+	    if Pos == LastMineExplosion.minePlace then
+	       if Message \= nil then
+		  {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition {Max MyLife-Message 0} LastMineExplosion}
+	       else
+		  {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
+	       end
+	    else
+	       if Message \= nil then
+		  {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition {Max MyLife-Message 0} nil}
+	       else
+		  {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
+	       end
+	    end	    
 	 else
-	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife}
+	    if Message \= nil then
+	       {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition {Max MyLife-Message 0} nil}
+	    else
+	       {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
+	    end
 	 end
+	 
 	 
       [] sayPassingDrone(Drone ID Ans)|T then
 	  %check if we are in the row or column of the drone
@@ -761,10 +852,10 @@ in
 	    Ans=(Y == ListPosition.1.y)
 	 end
 	 ID = Id
-	 {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife}
+	 {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
 	 
       [] sayAnswerDrone(Drone ID Ans)|T then
-	 {TreatStream T Id Arme Surface ListPosition ListMine {NewAdvPosDrone AdvPosition ID Drone Ans} MyLife}
+	 {TreatStream T Id Arme Surface ListPosition ListMine {NewAdvPosDrone AdvPosition ID Drone Ans} MyLife LastMineExplosion}
 	 
       [] sayPassingSonar(ID Ans)|T then
 	 X Y
@@ -779,19 +870,60 @@ in
 	 end
 	 Ans = pt(x:X y:Y)
 	 ID = Id
-	 {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife}
+	 {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
 	 
       [] sayAnswerSonar(ID Ans)|T then
 	 %{Browse 'The sonar detect the player'(ID 'at position'(Ans))}
-	 {TreatStream T Id Arme Surface ListPosition ListMine {NewAdvPosSonar AdvPosition ID Ans} MyLife}
+	 {TreatStream T Id Arme Surface ListPosition ListMine {NewAdvPosSonar AdvPosition ID Ans} MyLife LastMineExplosion}
 	 
       [] sayDeath(ID)|T then
 	 %{Browse 'The next player is dead'(ID)}
-	 {TreatStream T Id Arme Surface ListPosition ListMine {PersonalNewRecord AdvPosition ID.id posType(dead)} MyLife}
+	 {TreatStream T Id Arme Surface ListPosition ListMine {PersonalNewRecord AdvPosition ID.id posType(dead)} MyLife LastMineExplosion}
 	 
       [] sayDamageTaken(ID Damage LifeLeft)|T then
 	 %{Browse 'Damage on player'(ID' number'(Damage) 'Lifeleft'(LifeLeft))}
-	 {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife}
+	 if LastMineExplosion \=  nil then
+	    NewAdvPos
+	 in
+	    {Delay 300}
+	    if ID.id == LastMineExplosion.playerId andthen LifeLeft > 0 then
+	       case AdvPosition.(LastMineExplosion.playerId)
+	       of posType(xRight pt(x:Xr y:Yf)) then
+		  if LastMineExplosion.minePlace.x == Xr andthen Damage==2 then
+		     {Browse tracked}
+		     NewAdvPos={PersonalNewRecord AdvPosition ID.id posType(tracked pt(x:Xr y:LastMineExplosion.minePlace.y))}
+		     {Browse NewAdvPos|h|nil}
+		  elseif LastMineExplosion.minePlace.x == Xr andthen Damage==1 then
+		     {Browse double}
+		     NewAdvPos={PersonalNewRecord AdvPosition ID.id posType(double pt(x:Xr y:LastMineExplosion.minePlace.y-1) pt(x:Xr y:LastMineExplosion.minePlace.y+1))}
+		     {Browse NewAdvPos|h|nil}
+		  else
+		     NewAdvPos=AdvPosition
+		  end
+	       [] posType(yRight pt(x:Xf y:Yr)) then
+		  if LastMineExplosion.minePlace.y == Yr andthen Damage==2 then
+		     {Browse tracked}
+		     NewAdvPos={PersonalNewRecord AdvPosition ID.id posType(tracked pt(x:LastMineExplosion.minePlace.x y:Yr))}
+		     {Browse NewAdvPos|h|nil}
+		  elseif LastMineExplosion.minePlace.y == Yr andthen Damage==1 then
+		     {Browse double}
+		     NewAdvPos={PersonalNewRecord AdvPosition ID.id posType(double pt(x:LastMineExplosion.minePlace.x-1 y:Yr) pt(x:LastMineExplosion.minePlace.x+1 y:Yr))}
+		     {Browse NewAdvPos|h|nil}
+		  else
+		     NewAdvPos=AdvPosition
+		  end
+	       else
+		  NewAdvPos=AdvPosition
+	       end
+	    else
+	       NewAdvPos=AdvPosition
+	    end
+	    
+	    {TreatStream T Id Arme Surface ListPosition ListMine NewAdvPos MyLife nil}
+	 else
+
+	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
+	 end
       else
 	 {Browse unknown_instruction}
 	 skip
