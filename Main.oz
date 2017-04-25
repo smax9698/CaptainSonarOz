@@ -341,7 +341,7 @@ in
 				       {Send PortPlayers.X sayMineExplode(Id8 Mine Msg)}
 		                       %check the response of the player X
 				       if Msg \= nil then
-	
+
 			                  %the player X lost life point
 					  NewLifeAfterMine.X = {Max 0 NewLife.X-Msg}
 					  {Sender sayDamageTaken(IdPlayers.X Msg NewLifeAfterMine.X) NewLife}
@@ -468,6 +468,7 @@ in
 		     %The case of KindFire is a missile
 	       [] missile(P) then
 		  {Browse bOOM}
+      {Send PortGUI explosion(Id7 P)}
 		              %say to each player that a missil was launched
 
 		  for X in 1..Input.nbPlayer do
@@ -553,13 +554,14 @@ in
 	       %simulate thinking |10|
 	 {Delay (({OS.rand} mod Input.thinkMin) + (Input.thinkMax-Input.thinkMin))}
 
-	       %explode mine |8|
+	       %explode mine |11|
 	 local Id8 Mine in
 
 	    {Send PortPlayers.ActualP fireMine(Id8 Mine)}
 	    {Wait Id8}
 	    if {Value.isDet Mine} then
 	       if (Mine \= nil) then
+         {Send PortGUI explosion(Id8 Mine)}
 		  {Send PortGUI removeMine(Id8 Mine)}
                                  %say to each player that a mine explode
 		  for X in 1..Input.nbPlayer do
