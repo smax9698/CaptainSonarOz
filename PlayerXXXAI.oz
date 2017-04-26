@@ -651,7 +651,7 @@ in
 	    % Si le joueur est touché on pourra en tirer des informations sur sa position
 	    if {Dist Pos H}>1 andthen {OS.rand} mod 1 == 0 andthen PId > 0 then
 	       explodeMine(minePlace:H playerId:PId)
-	    elseif {Dist Pos H}>1 andthen {OS.rand} mod 10 == 0 then
+	    elseif {Dist Pos H}>1 andthen {OS.rand} mod 25 == 0 then
 	       explodeMine(minePlace:H playerId:0)
 	    else
 	       {ExplodeMine T Pos AdvSt}
@@ -677,9 +677,7 @@ in
   
    proc{TreatStream Stream Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion} % has as many parameters as you want
       NewArme
-   in
-      {Browse Stream.1}
-      
+   in 
       case Stream
       of nil|T then skip
 	 % On chosit une position aléatoire correcte
@@ -699,7 +697,7 @@ in
 	 if MyLife > 0 then
 	    Ans=Surface ID=Id
 	 else
-	    Ans=nil ID=nil
+	    Ans=false ID=nil
 	 end
 	 {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 

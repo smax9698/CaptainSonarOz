@@ -178,17 +178,19 @@ in
    end
 
    % Determine une case ou l'on peut tirer/placer une arme
-   fun{FindPlaceForFire Min Max Position}
+   fun{FindPlaceForFire Min Max Position Missile}
       S X Y
    in
       S = ({OS.rand} mod Max) + Min
       X = (S - {OS.rand} mod (S+1)) * {Pow ~1 ({OS.rand} mod 2 + 1)}
       Y = (S - {Abs X}) * {Pow ~1 ({OS.rand} mod 2 + 1)}
 
-      if {CheckPosition Position.x+X Position.y+Y} then
+      if {CheckPosition Position.x+X Position.y+Y} andthen Missile == false then
+	 pt(x:(Position.x+X) y:(Position.y+Y))
+      elseif {CheckPosition Position.x+X Position.y+Y} andthen Missile == true andthen {Abs Position.x-X}+{Abs Position.y-Y} > 1 then
 	 pt(x:(Position.x+X) y:(Position.y+Y))
       else
-	 {FindPlaceForFire Min Max Position}
+	 {FindPlaceForFire Min Max Position Missile}
       end
 
    end
@@ -224,11 +226,11 @@ in
       if Arme.sonar >= Input.sonar then
 	 Fire=sonar
       elseif Arme.missile >= Input.missile then
-	 Fire=missile({FindPlaceForFire Input.minDistanceMissile Input.maxDistanceMissile Position})
+	 Fire=missile({FindPlaceForFire Input.minDistanceMissile Input.maxDistanceMissile Position true})
       elseif Arme.drone >= Input.drone then
 	 Fire=drone(row (({OS.rand} mod Input.nRow)+1))
       elseif Arme.mine >= Input.mine then
-	 Fire=mine({FindPlaceForFire Input.minDistanceMine Input.maxDistanceMine Position})
+	 Fire=mine({FindPlaceForFire Input.minDistanceMine Input.maxDistanceMine Position false})
       else Fire=nil
       end
       Fire
@@ -447,7 +449,7 @@ in
 	    X Y
 	 in
 	  %random choice of wrong coordonate
-	    if({OS.rand} mod 1) ==0 then
+	    if({OS.rand} mod 2) ==0 then
 	       X=({OS.rand} mod Input.nRow)+1
 	       Y = ListPosition.1.y
 	    else
@@ -467,6 +469,9 @@ in
 	 {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 
       [] sayDeath(ID)|T then
+	 if ID.id == Id.id then
+	    {Browse ListPosition.1}
+	 end
 	 {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 
       [] sayDamageTaken(ID Damage LifeLeft)|T then

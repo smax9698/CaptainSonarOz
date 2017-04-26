@@ -159,8 +159,6 @@ in
 	 else
 	    {ServerLife T {PersonalNewRecord Life X L} NumberInLife}
 	 end
-
-
       end
    end
 
@@ -170,16 +168,12 @@ in
 
 
       if {CheckEnd Life} then % End of the game
-	 {Browse Life}
 	 {Browse 'End Of The Game'}
       elseif Life.ActualP == 0 then % Le joueur est mort donc au suivant
-	 {Browse nextImDead}
 	 {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
       else
 	 
-	 % IMPLEMENTER UN TOUR
 	 % Check if the submarine can play |1|
-
 	 local Id2 Ans2 in
 	    {Send PortPlayers.ActualP isSurface(Id2 Ans2)}
 	    if Ans2 then
@@ -248,28 +242,28 @@ in
 
 			               %check the answer of the player X
 				    if Life.X > 0 then
-				        Msg in
-					  {Send PortPlayers.X sayMissileExplode(Id7 P Msg)}
-					  if Msg \= nil then
+				       Msg in
+				       {Send PortPlayers.X sayMissileExplode(Id7 P Msg)}
+				       if Msg \= nil then
 
 			                  %the player X lost life point
-					     NewLife.X = {Max 0 Life.X-Msg}
-					     {Sender sayDamageTaken(IdPlayers.X Msg NewLife.X) Life}
-					     if NewLife.X > 0 then
-						{Send PortGUI lifeUpdate(IdPlayers.X NewLife.X)}
-					     end
+					  NewLife.X = {Max 0 Life.X-Msg}
+					  {Sender sayDamageTaken(IdPlayers.X Msg NewLife.X) Life}
+					  if NewLife.X > 0 then
+					     {Send PortGUI lifeUpdate(IdPlayers.X NewLife.X)}
+					  end
 
-					     if NewLife.X == 0 then
+					  if NewLife.X == 0 then
 			                     %The player X is dead
-						{Sender sayDeath(IdPlayers.X) Life}
-						{Send PortGUI removePlayer(IdPlayers.X)}
-					     end
-					  else
-					     NewLife.X = Life.X
+					     {Sender sayDeath(IdPlayers.X) Life}
+					     {Send PortGUI removePlayer(IdPlayers.X)}
 					  end
 				       else
-					  NewLife.X=Life.X
+					  NewLife.X = Life.X
 				       end
+				    else
+				       NewLife.X=Life.X
+				    end
 				 end
 
 		              %The case of KindFire is a drone(row)
@@ -393,12 +387,10 @@ in
       {Send PortLife long(Life)}
       {Send PortLife life(p:ActualP l:Y)} %vie du joueur actuel
       if  X == 1 then
-	 {Browse Life}
-	 {Browse 'End Of The Game'}
+	 End.ActualP = 0
       elseif Y == 0 then
 	 %the player is dead
 	 End.ActualP = 0
-	 {Browse iamDead}
       else
 	 local Id2 Ans2 in
 	    %check if the payer is on surface
@@ -414,7 +406,6 @@ in
 
 	       local Id3 Position3 Direction3 Life in
 		  %chose direction |3|
-
 		  {Send PortLife long(Life)}
 		  {Send PortPlayers.ActualP move(Id3 Position3 Direction3)}
 		  if Direction3 == surface then
@@ -436,52 +427,51 @@ in
 	 end % end local surface
 
 
-	       %simulate thinking |6|
+	 %simulate thinking |6|
 	 {Delay (({OS.rand} mod Input.thinkMin) + (Input.thinkMax-Input.thinkMin))}
 
-	       %Ask charge Item |7|
+	 %Ask charge Item |7|
 	 local Id6 KindItem Life in
 	    {Send PortLife long(Life)}
 	    {Send PortPlayers.ActualP chargeItem(Id6 KindItem)}
 	    {Wait Id6}
 	    if {Value.isDet KindItem} then
 	       if KindItem \= nil then
-                        %say to other player that he charge
+                  %say to other player that he charge
 		  {Sender sayCharge(Id6 KindItem) Life}
 	       end
 	    end
 	 end
 
-	       %simulate thinking |8|
+	 %simulate thinking |8|
 	 {Delay (({OS.rand} mod Input.thinkMin) + (Input.thinkMax-Input.thinkMin))}
 
-	       %Ask fire |9|
+	 %Ask fire |9|
 	 local Id7 KindFire Msg Life in
 	    {Send PortLife long(Life)}
 	    {Send PortPlayers.ActualP fireItem(Id7 KindFire)}
 	    {Wait Id7}
 	    if {Value.isDet KindFire} then
-                     %The case of KindFire is a mine
+               %The case of KindFire is a mine
 	       case KindFire of mine(P) then
 		  {Sender sayMinePlaced(Id7) Life}
 		  {Send PortGUI putMine(Id7 P)}
 
-		     %The case of KindFire is a missile
+	       %The case of KindFire is a missile
 	       [] missile(P) then
-		  {Browse bOOM}
-		  {Send PortGUI explosion(Id7 P)}
-		              %say to each player that a missil was launched
-
+		  
+		  %{Send PortGUI explosion(Id7 P)}
+		  %say to each player that a missil was launched
 		  for X in 1..Input.nbPlayer do
 		     local Msg Lifex Life NewLife in
-			      %check the response of the player X
+			%check the response of the player X
 			{Send PortLife life(p:X l:Lifex)}
 			{Send PortLife long(Life)}
 			if Lifex > 0 then
 			   {Send PortPlayers.X sayMissileExplode(Id7 P Msg)}
 			   if Msg \= nil then
 
-			            %the player X lost life point
+			      %the player X lost life point
 			      NewLife = {Max 0 Lifex-Msg}
 			      {Send PortLife newlife(p:X l:NewLife)}
 			      {Sender sayDamageTaken(IdPlayers.X Msg NewLife) Life}
@@ -490,9 +480,9 @@ in
 			      end
 
 			      if NewLife == 0 then
-			                     %The player X is dead
+			         %The player X is dead
+				 {Browse IdPlayers.X|deadonmissile|P}
 				 {Sender sayDeath(IdPlayers.X) Life}
-				 {Browse missile|removePlayer|IdPlayers.X}
 
 				 {Send PortGUI removePlayer(IdPlayers.X)}
 			      end
@@ -502,7 +492,7 @@ in
 		     end
 		  end
 
-		              %The case of KindFire is a drone(row)
+	       %The case of KindFire is a drone(row)
 	       [] drone(row X) then
 
 		  for X in 1..Input.nbPlayer do
@@ -517,7 +507,7 @@ in
 
 		  end
 
-		              %The case of KindFire is a drone(column)
+	       %The case of KindFire is a drone(column)
 	       [] drone(column Y) then
 
 		  for X in 1..Input.nbPlayer do
@@ -532,7 +522,7 @@ in
 
 		  end
 
-		              %The case of KindFire is a sonar
+	       %The case of KindFire is a sonar
 	       [] sonar then
 
 		  for X in 1..Input.nbPlayer do
@@ -546,40 +536,38 @@ in
 		     end
 		  end
 
-		              %The case of KindFire is null
+	       %The case of KindFire is null
 	       [] nil then skip
 	       end %end case kindfire
 	    end %end if det
 	 end % end local kindfire
 
-	       %simulate thinking |10|
+	 %simulate thinking |10|
 	 {Delay (({OS.rand} mod Input.thinkMin) + (Input.thinkMax-Input.thinkMin))}
 
-	       %explode mine |11|
+	 %explode mine |11|
 	 local Id8 Mine in
 
 	    {Send PortPlayers.ActualP fireMine(Id8 Mine)}
 	    {Wait Id8}
 	    if {Value.isDet Mine} then
 	       if (Mine \= nil) then
-         {Send PortGUI explosion(Id8 Mine)}
+		  %{Send PortGUI explosion(Id8 Mine)}
 		  {Send PortGUI removeMine(Id8 Mine)}
-                                 %say to each player that a mine explode
+                  %say to each player that a mine explode
 		  for X in 1..Input.nbPlayer do
 		     local  Msg Lifex Life NewLife  in
-			      %check the response of the player X
+			%check the response of the player X
 			{Send PortLife life(p:X l:Lifex)}
 			{Send PortLife long(Life)}
 			{Wait Lifex}
 			{Wait Life}
 			if Lifex > 0 then
 			   {Send PortPlayers.X sayMineExplode(Id8 Mine Msg)}
-		                       %check the response of the player X
+		           %check the response of the player X
 			   {Wait Msg}
-			   {Browse Msg}
 			   if Msg \=nil then
-			      {Browse lost_life_on_mine}
-			                  %the player X lost life point
+			      %the player X lost life point
 			      NewLife = {Max 0 Lifex-Msg}
 			      {Send PortLife newlife(p:X l:NewLife)}
 			      {Sender sayDamageTaken(IdPlayers.X Msg NewLife) Life}
@@ -589,9 +577,9 @@ in
 			      end
 
 			      if NewLife == 0 then
-			                     %The player X is dead
+			         %The player X is dead
+				 {Browse IdPlayers.X|deadonmine|Mine}
 				 {Sender sayDeath(IdPlayers.X) Life}
-				 {Browse removePlayer}
 				 {Send PortGUI removePlayer(IdPlayers.X)}
 			      end
 			   end % end if Msg
@@ -641,7 +629,7 @@ in
       for X in 1..Input.nbPlayer do
 	 thread {SimultaneousGame X Input.nbPlayer} end
       end
-
+      {Browse here}
       for X in 1.. Input.nbPlayer do
 	 {Wait End.X}
       end
@@ -655,7 +643,7 @@ in
    end
 
    {Send PortGUI nil}
-   {Delay 4000}
+   {Delay 2000}
 
    {Browse 'the END'}
 end
