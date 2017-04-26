@@ -219,17 +219,30 @@ in
       end
    end
 
-   fun{DrawExplosion Position}
-      fun{$ Grid State}
-		local
-		Command = afplay
-		Args = 'sound/boom.mp3'|nil
+	proc{Play X}
+		CommandMac = afplay
+		CommandLinux = play
+		Args
 		Stdin Stdout Pid
 		in
-
-		{OS.pipe Command Args Pid Stdin#Stdout}
-
+		
+		case X of boom then Args = 'sound/boom.mp3'|nil
+		[]drone then Args= 'sound/drone.mp3'|nil
+		[]mine then Args = 'sound/sonar.mp3'|nil
+		[]sonar then Args = 'sound/sonar.mp3'|nil
+		[]end then Args= 'sound/end.mp3'|nil
+		[]start then Args = 'sound/start.mp3'|nil
 		end
+
+
+		{OS.pipe CommandMac Args Pid Stdin#Stdout}
+		{OS.pipe CommandLinux Args Pid Stdin#Stdout}
+
+	end
+
+   fun{DrawExplosion Position}
+      fun{$ Grid State}
+		
 	 ID HandleScore Handle Mine Path LabelExplosion1 LabelExplosion2
    LabelExplosion3 LabelExplosion4 LabelExplosion5 LabelExplosion6
    LabelExplosion7 LabelExplosion8 LabelExplosion9 LabelExplosion10
@@ -237,6 +250,7 @@ in
    HandleExplosion5 HandleExplosion6 HandleExplosion7 HandleExplosion8
    HandleExplosion9 HandleExplosion10 X Y
       in
+		{play boom}
       guiPlayer(id:ID score:HandleScore submarine:Handle mines:Mine path:Path) = State
    	 pt(x:X y:Y) = Position
    	 LabelExplosion1 = label(handle:HandleExplosion1 width:60 height:60 image:ExplosionImg1 bg: c(46 110 145))
