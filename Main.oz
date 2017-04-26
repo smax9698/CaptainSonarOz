@@ -642,6 +642,7 @@ in
       {Send PortPlayers.U nil}
    end
 
+   {send PortGUI stop}
    {Send PortGUI nil}
    {Delay 2000}
 

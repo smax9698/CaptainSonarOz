@@ -185,6 +185,7 @@ in
       fun{$ Grid State}
 	 ID HandleScore Handle Mine Path LabelMine HandleMine X Y
       in
+	 {Play mine}
 	 guiPlayer(id:ID score:HandleScore submarine:Handle mines:Mine path:Path) = State
 	 pt(x:X y:Y) = Position
 	 LabelMine = label(handle:HandleMine width:60 height:60 bg:ID.color image:MineImg)
@@ -220,7 +221,7 @@ in
       end
    end
 
-/*	proc{Play X}
+	proc{Play X}
 		CommandMac = afplay
 		CommandLinux = play
 		Args
@@ -229,10 +230,9 @@ in
 		
 		case X of boom then Args = 'sound/boom.mp3'|nil
 		[]drone then Args= 'sound/drone.mp3'|nil
-		[]mine then Args = 'sound/sonar.mp3'|nil
+		[]mine then Args = 'sound/mine.mp3'|nil
 		[]sonar then Args = 'sound/sonar.mp3'|nil
-		[]endofgame then Args= 'sound/end.mp3'|nil
-		[]start then Args = 'sound/start.mp3'|nil
+		[]endofgame then Args= 'sound/endofgame.mp3'|nil
 		end
 
 
@@ -240,7 +240,7 @@ in
 		{OS.pipe CommandLinux Args Pid Stdin#Stdout}
 
 	end
-*/
+
    fun{DrawExplosion Position}
       fun{$ Grid State}
 		
@@ -251,7 +251,7 @@ in
    HandleExplosion5 HandleExplosion6 HandleExplosion7 HandleExplosion8
    HandleExplosion9 HandleExplosion10 X Y
       in
-		%{Play boom}
+		{Play boom}
       guiPlayer(id:ID score:HandleScore submarine:Handle mines:Mine path:Path) = State
    	 pt(x:X y:Y) = Position
    	 LabelExplosion1 = label(handle:HandleExplosion1 width:60 height:60 image:ExplosionImg1 bg: c(46 110 145))
@@ -433,9 +433,13 @@ in
       [] explosion(ID Position)|T then
 	 {TreatStream T Grid {StateModification Grid ID State {DrawExplosion Position}}}
       [] drone(ID Drone)|T then
+	 {Play drone}
 	 {TreatStream T Grid State}
       [] sonar(ID)|T then
+	 {Play sonar}
 	 {TreatStream T Grid State}
+      [] stop|T then
+	 {Play endofgame}
       [] _|T then
 	 {TreatStream T Grid State}
       end
