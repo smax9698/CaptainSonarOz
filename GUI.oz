@@ -222,10 +222,9 @@ in
    fun{DrawExplosion Position}
       fun{$ Grid State}
 		local
-		Command = play
+		Command = afplay
 		Args = 'sound/boom.mp3'|nil
 		Stdin Stdout Pid
-
 		in
 
 		{OS.pipe Command Args Pid Stdin#Stdout}
