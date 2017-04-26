@@ -242,7 +242,7 @@ in
 		              %The case of KindFire is a missile
 			      [] missile(P) then
 		              %say to each player that a missil was launched
-
+				 {Send PortGUI explosion(Id7 P)}
 				 for X in 1..Input.nbPlayer do
 				    
 
@@ -333,6 +333,7 @@ in
 			   if {Value.isDet Mine} then
 			      if (Mine \= nil) then
 				 {Send PortGUI removeMine(Id8 Mine)}
+				 {Send PortGUI explosion(Id8 Mine)}
                                  %say to each player that a mine explode
 				 for X in 1..Input.nbPlayer do
 				    Msg
@@ -468,7 +469,7 @@ in
 		     %The case of KindFire is a missile
 	       [] missile(P) then
 		  {Browse bOOM}
-      {Send PortGUI explosion(Id7 P)}
+		  {Send PortGUI explosion(Id7 P)}
 		              %say to each player that a missil was launched
 
 		  for X in 1..Input.nbPlayer do
