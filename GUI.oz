@@ -42,6 +42,7 @@ define
    FontPath
 
    SubmarineImg
+	SubmarineBrokenImg
    WaterImg
    MineImg
    TerreImg
@@ -62,7 +63,7 @@ in
    W=65
    H=65
    SubmarineImg = {QTk.newImage photo(file:'img/submarine.gif' width:W height:H format:gif)}
-   
+   SubmarineBrokenImg = {QTk.newImage photo(file:'img/submarinebroken.gif' width:W height:H format:gif)}
    WaterImg = {QTk.newImage photo(file:'img/mer.gif' width:W height:H format:gif)}
    TerreImg = {QTk.newImage photo(file:'img/sol.gif' width:W height:H format:gif)}
    MineImg = {QTk.newImage photo(file:'img/mine2.gif' width:W height:H format:gif)}
@@ -359,6 +360,9 @@ in
       of nil then nil
       [] guiPlayer(id:ID score:HandleScore submarine:Handle mines:M path:P)|Next then
 	 if (ID.id == WantedID.id) then
+		{Handle set(image:SubmarineBrokenImg)}
+		{Handle 'raise'()}
+		{Delay 1000}
 	    {HandleScore set(0)}
 	    {RemoveItem Grid Handle}
 	    for H in P do
