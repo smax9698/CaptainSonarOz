@@ -11,6 +11,7 @@ define
    Browse = Browser.browse
    RandPosWater
    ChooseRandDirection
+   ChooseDir
    CheckPosition
    CheckList
    DeleteMine
@@ -340,46 +341,34 @@ in
       end
    end
 
-    % Retourne la direction choisie de facon aléatoire. Si aucune direction n'est possible on retourne surface
-   fun{ChooseRandDirection ListPos}
-      R Dir
+   fun{ChooseDir ListPos}
+      Dir
    in
-      R = ({OS.rand} mod 4)
-
-      % On test dans un ordre aléatoire les 4 directions possibles et on s'arrête des qu'on en trouve une acceptable
-      for D in 1..4 break:U do
-	 Z in
-	 Z = ((R+D) mod 4) + 1
-	 if Z == 1 then % west
-	    if ({CheckPosition ListPos.1.x ListPos.1.y-1} andthen {CheckList ListPos pt(x:ListPos.1.x y:(ListPos.1.y-1))}==false) then
-	       Dir = west
-	       {U}
-	    end
-	 elseif Z == 2 then % south
+      if {CheckPosition ListPos.1.x ListPos.1.y+1} andthen {CheckList ListPos pt(x:ListPos.1.x y:(ListPos.1.y+1))}==false then % On essaie d'aller vers la droite en priorité
+	 Dir = east
+      elseif {CheckPosition ListPos.1.x ListPos.1.y-1} andthen {CheckList ListPos pt(x:ListPos.1.x y:(ListPos.1.y-1))}==false then % Sinon on essaie d'aller vers la gauche
+	 Dir = west
+      else % Si ce n'est pas possible, on essaie de monter ou de descendre. Si on trouve se dans le bas de la carte on essaie d'abord de monter et puis de descendre et inversement
+	 if ListPos.1.x <= (Input.nRow div 2) then
 	    if {CheckPosition ListPos.1.x+1 ListPos.1.y} andthen {CheckList ListPos pt(x:(ListPos.1.x+1) y:ListPos.1.y)}==false then
-	       Dir = south
-	       {U}
+	       Dir=south
+	    elseif {CheckPosition ListPos.1.x-1 ListPos.1.y} andthen {CheckList ListPos pt(x:(ListPos.1.x-1) y:ListPos.1.y)}==false then
+	       Dir=north
+	    else
+	       Dir=surface
 	    end
-	 elseif Z == 3 then % east
-	    if {CheckPosition ListPos.1.x ListPos.1.y+1} andthen {CheckList ListPos pt(x:ListPos.1.x y:(ListPos.1.y+1))}==false then
-	       Dir = east
-	       {U}
-	    end
-	 else % north
+	 else
 	    if {CheckPosition ListPos.1.x-1 ListPos.1.y} andthen {CheckList ListPos pt(x:(ListPos.1.x-1) y:ListPos.1.y)}==false then
 	       Dir=north
-	       {U}
+	    elseif {CheckPosition ListPos.1.x+1 ListPos.1.y} andthen {CheckList ListPos pt(x:(ListPos.1.x+1) y:ListPos.1.y)}==false then
+	       Dir=south
+	    else
+	       Dir=surface
 	    end
-	 end
-
-	 % Si aucune direction n'est possible, on fait surface.
-	 if D == 4 then
-	    Dir=surface
-	    {U}
-	 end
+	 end	 
       end
-      Dir
-   end  
+   end
+
 
     % On charge une arme en fonction du statut des adversaires
    fun{ChargeItem ArmeRecord AdvStatus}
@@ -588,6 +577,8 @@ in
 	 Pt = {PositionPlayerToTarget {Max 2 Input.minDistanceMissile} Input.maxDistanceMissile AdvSt Position}
 	 if Arme.missile >= Input.missile andthen Pt \= nil then % On regarde si un joueur est atteignable
 	    Fire=missile(Pt)
+	    {Browse fireMissileAdvanced|Position|Pt}
+	    {Delay 300}
 	 elseif Arme.mine >= Input.mine then
 	    Fire=mine({FindPlaceForFire Input.minDistanceMine Input.maxDistanceMine Position})
 	 elseif Arme.sonar >= Input.sonar then
@@ -704,7 +695,7 @@ in
 	 % On fait appel à la fonction ChooseRandDirection et on modifie notre position en fonction du resultat
       [] move(ID Pos Dir)|T then
 	 if MyLife > 0 then
-	    Dir = {ChooseRandDirection ListPosition}
+	    Dir = {ChooseDir ListPosition}
 	    if Dir == west then Pos = pt(x:ListPosition.1.x y:(ListPosition.1.y-1))
 	    elseif Dir == east then Pos = pt(x:ListPosition.1.x y:(ListPosition.1.y+1)) 
 	    elseif Dir == south then Pos = pt(x:(ListPosition.1.x+1) y:ListPosition.1.y)

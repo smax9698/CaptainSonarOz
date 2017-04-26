@@ -28,6 +28,8 @@ in
    % record arme : contient le nombre de charge pour chaque arme.
    % Boolean Surface : est à true si le sous-marin est la surface et a false sinon (initialement à true).
    % Liste ListPosition : contient l'ensemble des position parcourue dans l'ordre anti-chronologique (initialement à nil).
+   % Liste ListMine : contient l'ensemble des mines placées par le joueur
+   % Entier MyLife : Vie actuelle du joueur
    fun{StartPlayer Color ID}
       Stream
       Port
@@ -178,19 +180,17 @@ in
    end
 
    % Determine une case ou l'on peut tirer/placer une arme
-   fun{FindPlaceForFire Min Max Position Missile}
+   fun{FindPlaceForFire Min Max Position}
       S X Y
    in
-      S = ({OS.rand} mod Max) + Min
+      S = ({OS.rand} mod ((Max-Min)+1)) + Min
       X = (S - {OS.rand} mod (S+1)) * {Pow ~1 ({OS.rand} mod 2 + 1)}
       Y = (S - {Abs X}) * {Pow ~1 ({OS.rand} mod 2 + 1)}
 
-      if {CheckPosition Position.x+X Position.y+Y} andthen Missile == false then
-	 pt(x:(Position.x+X) y:(Position.y+Y))
-      elseif {CheckPosition Position.x+X Position.y+Y} andthen Missile == true andthen {Abs Position.x-X}+{Abs Position.y-Y} > 1 then
+      if {CheckPosition Position.x+X Position.y+Y} then
 	 pt(x:(Position.x+X) y:(Position.y+Y))
       else
-	 {FindPlaceForFire Min Max Position Missile}
+	 {FindPlaceForFire Min Max Position}
       end
 
    end
@@ -226,11 +226,13 @@ in
       if Arme.sonar >= Input.sonar then
 	 Fire=sonar
       elseif Arme.missile >= Input.missile then
-	 Fire=missile({FindPlaceForFire Input.minDistanceMissile Input.maxDistanceMissile Position true})
+	 Fire=missile({FindPlaceForFire {Max 2 Input.minDistanceMissile} Input.maxDistanceMissile Position})
+	 {Browse fireMissile|Position|Fire}
+	 {Delay 300}
       elseif Arme.drone >= Input.drone then
 	 Fire=drone(row (({OS.rand} mod Input.nRow)+1))
       elseif Arme.mine >= Input.mine then
-	 Fire=mine({FindPlaceForFire Input.minDistanceMine Input.maxDistanceMine Position false})
+	 Fire=mine({FindPlaceForFire Input.minDistanceMine Input.maxDistanceMine Position})
       else Fire=nil
       end
       Fire
@@ -409,7 +411,7 @@ in
 	    case Pos of pt(x:X y:Y) then
 	       Distance = ({Abs X-ListPosition.1.x} + {Abs Y-ListPosition.1.y})
 	       if(Distance>=2) then
-		  Message = 0
+		  Message = nil
 	       elseif(Distance==1) then
 		  Message = 1
 	       else
@@ -470,7 +472,7 @@ in
 
       [] sayDeath(ID)|T then
 	 if ID.id == Id.id then
-	    {Browse ListPosition.1}
+	    {Browse deadAt|ListPosition.1}
 	 end
 	 {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 
