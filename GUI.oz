@@ -3,6 +3,7 @@ import
    QTk at 'x-oz://system/wp/QTk.ozf'
    Input
    Browser
+	OS
 export
    portWindow:StartWindow
 define
@@ -61,6 +62,7 @@ in
    W=65
    H=65
    SubmarineImg = {QTk.newImage photo(file:'img/submarine.gif' width:W height:H format:gif)}
+   
    WaterImg = {QTk.newImage photo(file:'img/mer.gif' width:W height:H format:gif)}
    TerreImg = {QTk.newImage photo(file:'img/sol.gif' width:W height:H format:gif)}
    MineImg = {QTk.newImage photo(file:'img/mine2.gif' width:W height:H format:gif)}
@@ -218,6 +220,16 @@ in
 
    fun{DrawExplosion Position}
       fun{$ Grid State}
+		local
+		Command = play
+		Args = 'sound/boom.mp3'|nil
+		Stdin Stdout Pid
+
+		in
+
+		{OS.pipe Command Args Pid Stdin#Stdout}
+
+		end
 	 ID HandleScore Handle Mine Path LabelExplosion1 LabelExplosion2
    LabelExplosion3 LabelExplosion4 LabelExplosion5 LabelExplosion6
    LabelExplosion7 LabelExplosion8 LabelExplosion9 LabelExplosion10
@@ -231,61 +243,61 @@ in
    	 {Grid.grid configure(LabelExplosion1 row:X+1 column:Y+1)}
    	 {HandleExplosion1 'raise'()}
    	 {Handle 'raise'()}
-     {Delay 20}
+     {Delay 50}
      {Grid.grid forget(HandleExplosion1)}
      LabelExplosion2 = label(handle:HandleExplosion2 width:60 height:60 image:ExplosionImg2 bg: c(46 110 145))
    	 {Grid.grid configure(LabelExplosion2 row:X+1 column:Y+1)}
    	 {HandleExplosion2 'raise'()}
    	 {Handle 'raise'()}
-     {Delay 20}
+     {Delay 50}
      {Grid.grid forget(HandleExplosion2)}
      LabelExplosion3 = label(handle:HandleExplosion3 width:60 height:60 image:ExplosionImg3 bg: c(46 110 145))
    	 {Grid.grid configure(LabelExplosion3 row:X+1 column:Y+1)}
    	 {HandleExplosion3 'raise'()}
    	 {Handle 'raise'()}
-     {Delay 20}
+     {Delay 50}
      {Grid.grid forget(HandleExplosion3)}
      LabelExplosion4 = label(handle:HandleExplosion4 width:60 height:60 image:ExplosionImg4 bg: c(46 110 145))
    	 {Grid.grid configure(LabelExplosion4 row:X+1 column:Y+1)}
    	 {HandleExplosion4 'raise'()}
    	 {Handle 'raise'()}
-     {Delay 20}
+     {Delay 50}
      {Grid.grid forget(HandleExplosion4)}
      LabelExplosion5 = label(handle:HandleExplosion5 width:60 height:60 image:ExplosionImg5 bg: c(46 110 145))
    	 {Grid.grid configure(LabelExplosion5 row:X+1 column:Y+1)}
    	 {HandleExplosion5 'raise'()}
    	 {Handle 'raise'()}
-     {Delay 20}
+     {Delay 50}
      {Grid.grid forget(HandleExplosion5)}
      LabelExplosion6 = label(handle:HandleExplosion6 width:60 height:60 image:ExplosionImg6 bg: c(46 110 145))
    	 {Grid.grid configure(LabelExplosion6 row:X+1 column:Y+1)}
    	 {HandleExplosion6 'raise'()}
    	 {Handle 'raise'()}
-     {Delay 20}
+     {Delay 50}
      {Grid.grid forget(HandleExplosion6)}
      LabelExplosion7 = label(handle:HandleExplosion7 width:60 height:60 image:ExplosionImg7 bg: c(46 110 145))
    	 {Grid.grid configure(LabelExplosion7 row:X+1 column:Y+1)}
    	 {HandleExplosion7 'raise'()}
    	 {Handle 'raise'()}
-     {Delay 20}
+     {Delay 50}
      {Grid.grid forget(HandleExplosion7)}
      LabelExplosion8 = label(handle:HandleExplosion8 width:60 height:60 image:ExplosionImg8 bg: c(46 110 145))
    	 {Grid.grid configure(LabelExplosion8 row:X+1 column:Y+1)}
    	 {HandleExplosion8 'raise'()}
    	 {Handle 'raise'()}
-     {Delay 20}
+     {Delay 50}
      {Grid.grid forget(HandleExplosion8)}
      LabelExplosion9 = label(handle:HandleExplosion9 width:60 height:60 image:ExplosionImg9 bg: c(46 110 145))
    	 {Grid.grid configure(LabelExplosion9 row:X+1 column:Y+1)}
    	 {HandleExplosion9 'raise'()}
    	 {Handle 'raise'()}
-     {Delay 20}
+     {Delay 50}
      {Grid.grid forget(HandleExplosion9)}
      LabelExplosion10 = label(handle:HandleExplosion10 width:60 height:60 image:ExplosionImg10 bg: c(46 110 145))
    	 {Grid.grid configure(LabelExplosion10 row:X+1 column:Y+1)}
    	 {HandleExplosion10 'raise'()}
    	 {Handle 'raise'()}
-     {Delay 20}
+     {Delay 50}
      {Grid.grid forget(HandleExplosion10)}
    	 guiPlayer(id:ID score:HandleScore submarine:Handle mines:Mine path:Path)
 
@@ -355,6 +367,8 @@ in
 	    for H in M do
 	       {RemoveItem Grid H.1}
 	    end
+		
+		
 
 	    Next
 	 else
