@@ -172,7 +172,7 @@ in
       elseif Life.ActualP == 0 then % Le joueur est mort donc au suivant
 	 {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
       else
-	 
+
 	 % Check if the submarine can play |1|
 	 local Id2 Ans2 in
 	    {Send PortPlayers.ActualP isSurface(Id2 Ans2)}
@@ -238,7 +238,7 @@ in
 		              %say to each player that a missil was launched
 				 {Send PortGUI explosion(Id7 P)}
 				 for X in 1..Input.nbPlayer do
-				    
+
 
 			               %check the answer of the player X
 				    if Life.X > 0 then
@@ -459,7 +459,7 @@ in
 
 	       %The case of KindFire is a missile
 	       [] missile(P) then
-		  
+
 		  {Send PortGUI explosion(Id7 P)}
 		  %say to each player that a missil was launched
 		  for X in 1..Input.nbPlayer do
@@ -642,7 +642,7 @@ in
       {Send PortPlayers.U nil}
    end
 
-   {send PortGUI stop}
+   {Send PortGUI stop}
    {Send PortGUI nil}
    {Delay 2000}
 

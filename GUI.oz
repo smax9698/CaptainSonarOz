@@ -223,11 +223,12 @@ in
 
 	proc{Play X}
 		CommandMac = afplay
-		CommandLinux = play
+		CommandLinux = mpg123
 		Args
-		Stdin Stdout Pid
+		StdinM StdoutM PidM
+    StdinL StdoutL PidL
 		in
-		
+
 		case X of boom then Args = 'sound/boom.mp3'|nil
 		[]drone then Args= 'sound/drone.mp3'|nil
 		[]mine then Args = 'sound/mine.mp3'|nil
@@ -236,14 +237,14 @@ in
 		end
 
 
-		{OS.pipe CommandMac Args Pid Stdin#Stdout}
-		{OS.pipe CommandLinux Args Pid Stdin#Stdout}
+		{OS.pipe CommandMac Args PidM StdinM#StdoutM}
+		{OS.pipe CommandLinux Args PidL StdinL#StdoutL}
 
 	end
 
    fun{DrawExplosion Position}
       fun{$ Grid State}
-		
+
 	 ID HandleScore Handle Mine Path LabelExplosion1 LabelExplosion2
    LabelExplosion3 LabelExplosion4 LabelExplosion5 LabelExplosion6
    LabelExplosion7 LabelExplosion8 LabelExplosion9 LabelExplosion10
@@ -385,8 +386,8 @@ in
 	    for H in M do
 	       {RemoveItem Grid H.1}
 	    end
-		
-		
+
+
 
 	    Next
 	 else
