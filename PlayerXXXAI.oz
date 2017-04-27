@@ -10,7 +10,6 @@ define
    TreatStream
    Browse = Browser.browse
    RandPosWater
-   ChooseRandDirection
    ChooseDir
    CheckPosition
    CheckList
@@ -119,7 +118,7 @@ in
   
    % On modifie la position pontentielle de l'adversaire dans le record R
    fun{MoveAdv R Id Dir}
-      if Id \= nil then
+      if Id \= null then
 	 case R.(Id.id)
 	 of posType(A pt(x:X y:Y)) then
 	    if Dir == west then {PersonalNewRecord R Id.id posType(A pt(x:X y:Y-1))}
@@ -178,25 +177,25 @@ in
 	 else
 	    R
 	 end
-      [] posType(xRight pt(x:X y:Y)) then % Si on connait déjà x et que le drone nous donne y, on connait la position exacte du joueur => Le joueur devient 'tracked'
+      [] posType(xRight pt(x:X y:_)) then % Si on connait déjà x et que le drone nous donne y, on connait la position exacte du joueur => Le joueur devient 'tracked'
 	 if Ans then
 	    case Drone
-	    of drone(row X2) then R
+	    of drone(row _) then R
 	    [] drone(column Y2) then {PersonalNewRecord R Id.id posType(tracked pt(x:X y:Y2))}
 	    end
 	 else
 	    R
 	 end
-      [] posType(yRight pt(x:X y:Y)) then % Si on connait déjà x et que le drone nous donne y, on connait la position exacte du joueur => Le joueur devient 'tracked'
+      [] posType(yRight pt(x:_ y:Y)) then % Si on connait déjà x et que le drone nous donne y, on connait la position exacte du joueur => Le joueur devient 'tracked'
 	 if Ans then
 	    case Drone
 	    of drone(row X2) then {PersonalNewRecord R Id.id posType(tracked pt(x:X2 y:Y))}
-	    [] drone(column Y2) then R
+	    [] drone(column _) then R
 	    end
 	 else
 	    R
 	 end
-      [] posType(tracked pt(x:X y:Y)) then R % Si on connait déjà la position il n'y a plus de déduction a faire
+      [] posType(tracked pt(x:_ y:_)) then R % Si on connait déjà la position il n'y a plus de déduction a faire
       [] posType(double pt(x:X1 y:Y1) pt(x:X2 y:Y2)) then % Si il y deux positions possibles, dans certains cas on peut déduire quelle position est la bonne
 	 case Drone
 	 of drone(row Xd) then
@@ -258,20 +257,20 @@ in
 
       case R.(Id.id)
       of nil then {PersonalNewRecord R Id.id posType(firstGuess P)} 
-      [] posType(xRight pt(x:X y:Y)) then
+      [] posType(xRight pt(x:X y:_)) then
 	 if X \= P.x then % On connaissait X et maintenant on connait aussi Y et donc la position exacte
 	    {PersonalNewRecord R Id.id posType(tracked pt(x:X y:P.y))}
 	 else % On ne peut rien déduire 
 	    R
 	 end
-      [] posType(yRight pt(x:X y:Y)) then % On connaissait Y et maintenant on connait aussi X et donc la position exacte
+      [] posType(yRight pt(x:_ y:Y)) then % On connaissait Y et maintenant on connait aussi X et donc la position exacte
 	 if Y \= P.y then
 	    {PersonalNewRecord R Id.id posType(tracked pt(x:P.x y:Y))}
 	 else % On ne peut rien déduire 
 	    R
 	 end
-      [] posType(tracked pt(x:X y:Y)) then R 
-      [] posType(double pt(x:X1 y:Y1) pt(x:X2 y:Y2)) then % Pas de déduction possible
+      [] posType(tracked pt(x:_ y:_)) then R 
+      [] posType(double pt(x:_ y:_) pt(x:_ y:_)) then % Pas de déduction possible
 	 R
       [] posType(firstGuess pt(x:X y:Y)) then
 	 if P.x==X andthen P.y==Y then % Pas de déduction possible
@@ -447,7 +446,7 @@ in
       elseif NewIt.drone > OldItem.drone andthen (NewIt.drone mod Input.drone) == 0 then
 	 Item=drone
       else
-	 Item=nil
+	 Item=null
       end
       Item
    end
@@ -470,20 +469,17 @@ in
 
    % Modifie un champ d'un record en retournant un nouveau record qui est une copie modifiée du record initial
    fun{PersonalNewRecord R Feat Val}
-      PNRSub NewR
-   in
-      PNRSub = {Record.subtract R Feat}
-      NewR = {AdjoinAt R Feat Val}
+      {AdjoinAt R Feat Val}
    end
 
    % Retourne le record arme modifié après un tir
    fun{FireArme Arme Kind}
-      case Kind of nil then Arme
+      case Kind of null then Arme
       [] sonar then {PersonalNewRecord Arme sonar Arme.sonar-Input.sonar}
-      [] missile(pt(x:X y:Y)) then {PersonalNewRecord Arme missile Arme.missile-Input.missile}
-      [] drone(row X) then {PersonalNewRecord Arme drone Arme.drone-Input.drone}
-      [] drone(column Y) then {PersonalNewRecord Arme drone Arme.drone-Input.drone}
-      [] mine(pt(x:X y:Y)) then {PersonalNewRecord Arme mine Arme.mine-Input.mine}
+      [] missile(_) then {PersonalNewRecord Arme missile Arme.missile-Input.missile}
+      [] drone(row _) then {PersonalNewRecord Arme drone Arme.drone-Input.drone}
+      [] drone(column _) then {PersonalNewRecord Arme drone Arme.drone-Input.drone}
+      [] mine(_) then {PersonalNewRecord Arme mine Arme.mine-Input.mine}
       else Arme
       end	 
    end
@@ -524,14 +520,14 @@ in
 	    elseif Y1 \=Y2 then
 	       Drone=drone(column Y1)
 	    else
-	       Drone=nil
+	       Drone=null
 	    end
 	    {U}
 	 else
 	    skip
 	 end
 	 if I==Input.nbPlayer then
-	    Drone=nil
+	    Drone=null
 	    {U}
 	 end
       end
@@ -555,7 +551,7 @@ in
 	 elseif Arme.mine >= Input.mine then
 	    Fire=mine({FindPlaceForFire Input.minDistanceMine Input.maxDistanceMine Position})
 	 else
-	    Fire=nil
+	    Fire=null
 	 end
 
 	 % Si un joueur est 'double' mais qu'il n'y a pas de tracked, on tire en priorité un drone puis un sonar puis une mine
@@ -567,7 +563,7 @@ in
 	 elseif Arme.mine >= Input.mine then
 	    Fire=mine({FindPlaceForFire Input.minDistanceMine Input.maxDistanceMine Position})
 	 else
-	    Fire=nil
+	    Fire=null
 	 end
 
 	 % Si un joueur est tracked, on regarde si on a un missile et si le joueur est atteignable. Si c'est le cas on tire le missile sinon on place une mine et finalement on utilise un sonar
@@ -582,7 +578,7 @@ in
 	 elseif Arme.sonar >= Input.sonar then
 	    Fire=sonar
 	 else
-	    Fire=nil
+	    Fire=null
 	 end
       else
 	 % Si on est dans aucun de ces cas, on lance en priorité un sonar et sinon on place une mine
@@ -591,7 +587,7 @@ in
 	 elseif Arme.mine >= Input.mine then
 	    Fire=mine({FindPlaceForFire Input.minDistanceMine Input.maxDistanceMine Position})
 	 else
-	    Fire=nil
+	    Fire=null
 	 end
       end
       Fire
@@ -603,12 +599,12 @@ in
    in
       for I in 1..Input.nbPlayer break:U do
 	 case AdvSt.I
-	 of posType(xRight pt(x:Xr y:Yf)) then
+	 of posType(xRight pt(x:Xr y:_)) then
 	    if Xr==Mine.x then
 	       Ans=I
 	       {U}
 	    end
-	 [] posType(yRight pt(x:Xf y:Yr)) then
+	 [] posType(yRight pt(x:_ y:Yr)) then
 	    if Yr==Mine.y then
 	       Ans=I
 	       {U}
@@ -670,14 +666,14 @@ in
       NewArme
    in 
       case Stream
-      of nil|T then skip
+      of nil|_ then skip
 	 % On chosit une position aléatoire correcte
       [] initPosition(ID Pos)|T then Pos={RandPosWater} ID=Id
 	 {TreatStream T Id Arme Surface Pos|ListPosition ListMine AdvPosition MyLife nil}
 
 	 % On met la variable Surface a false
       [] dive|T then
-	 case ListPosition of H|U then
+	 case ListPosition of H|_ then
 	    {TreatStream T Id Arme false H|nil ListMine AdvPosition MyLife nil}
 	 else
 	    {TreatStream T Id Arme false ListPosition ListMine AdvPosition MyLife nil}
@@ -705,8 +701,8 @@ in
 	    ID = Id
 	    {TreatStream T Id Arme (Dir==surface) Pos|ListPosition ListMine AdvPosition MyLife nil}
 	 else
-	    Dir = nil
-	    Pos = nil
+	    Dir = null
+	    Pos = null
 	    ID = null
 	    {TreatStream T Id Arme (Dir==surface) ListPosition ListMine AdvPosition MyLife nil}
 	 end
@@ -719,7 +715,7 @@ in
 	    ID=Id
 	    {TreatStream T Id NewArme Surface ListPosition ListMine AdvPosition MyLife nil}
 	 else
-	    KindItem=nil
+	    KindItem=null
 	    ID=null
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 	 end
@@ -736,7 +732,7 @@ in
 	       {TreatStream T Id NewArme Surface ListPosition ListMine AdvPosition MyLife nil}
 	    end
 	 else
-	    KindFire = nil
+	    KindFire = null
 	    ID=null
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 	 end
@@ -750,17 +746,17 @@ in
 	    if MineRec \=nil then 
 	       Mine=MineRec.minePlace % Mine a faire exploser
 	    else
-	       Mine=nil
+	       Mine=null
 	    end
 	 
 	    ID=Id
-	    if Mine == nil then
+	    if Mine == null then
 	       {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 	    else
 	       {TreatStream T Id Arme Surface ListPosition {DeleteMine ListMine Mine} AdvPosition MyLife MineRec} % On enregistre l'explosion (MineRec) pour pouvoir déduire la position d'un adversaire si on recoit un TakeDamage 
 	    end
 	 else
-	    Mine = nil
+	    Mine = null
 	    ID = null
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 	 end
@@ -786,7 +782,7 @@ in
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
 	 end
 
-      [] sayCharge(ID KindItem)|T then
+      [] sayCharge(ID _)|T then
 	 if ID.id == Id.id then
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 	 else
@@ -801,7 +797,7 @@ in
 	 end
 
 	 % On determine si on est touché ou non par le missile
-      [] sayMissileExplode(ID Pos Message)|T then
+      [] sayMissileExplode(_ Pos Message)|T then
 	 if MyLife > 0 then
 	    Distance
 	 in
@@ -809,14 +805,14 @@ in
 	    case Pos of pt(x:X y:Y) then
 	       Distance = ({Abs X-ListPosition.1.x} + {Abs Y-ListPosition.1.y})
 	       if Distance>=2 then
-		  Message=nil
+		  Message=null
 	       elseif Distance==1 then
 		  Message = 1
 	       else
 		  Message = 2
 	       end
 	    end
-	    if Message \= nil then
+	    if Message \= null then
 	       {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition {Max MyLife-Message 0} nil}
 	    else
 	       {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
@@ -834,7 +830,7 @@ in
 	    case Pos of pt(x:X y:Y) then
 	       Distance = ({Abs X-ListPosition.1.x} + {Abs Y-ListPosition.1.y})
 	       if(Distance>=2) then
-		  Message = nil
+		  Message = null
 	       elseif(Distance==1) then
 		  Message = 1
 	       else
@@ -844,20 +840,20 @@ in
 
 	    if LastMineExplosion \= nil then
 	       if Pos == LastMineExplosion.minePlace then % Si la mine qui a explosée était la notre on laisse LastMineExplosion sinon on met cette variable à nil
-		  if Message \= nil then
+		  if Message \= null then
 		     {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition {Max MyLife-Message 0} LastMineExplosion}
 		  else
 		     {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
 		  end
 	       else
-		  if Message \= nil then
+		  if Message \= null then
 		     {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition {Max MyLife-Message 0} nil}
 		  else
 		     {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 		  end
 	       end	    
 	    else
-	       if Message \= nil then
+	       if Message \= null then
 		  {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition {Max MyLife-Message 0} nil}
 	       else
 		  {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
@@ -887,7 +883,11 @@ in
 	 
 	 
       [] sayAnswerDrone(Drone ID Ans)|T then
-	 {TreatStream T Id Arme Surface ListPosition ListMine {NewAdvPosDrone AdvPosition ID Drone Ans} MyLife LastMineExplosion} % On traite l'information reçue et on met à joueur la position potentielle de l'adversaire
+	 if ID \=null then
+	    {TreatStream T Id Arme Surface ListPosition ListMine {NewAdvPosDrone AdvPosition ID Drone Ans} MyLife LastMineExplosion} % On traite l'information reçue et on met à joueur la position potentielle de l'adversaire
+	 else
+	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
+	 end
 	 
       [] sayPassingSonar(ID Ans)|T then
 	 if MyLife > 0 then
@@ -911,21 +911,24 @@ in
 	 end
 	 
       [] sayAnswerSonar(ID Ans)|T then
-
-	 {TreatStream T Id Arme Surface ListPosition ListMine {NewAdvPosSonar AdvPosition ID Ans} MyLife LastMineExplosion}% On traite l'information reçue et on met à joueur la position potentielle de l'adversaire
+	 if ID \= null then
+	    {TreatStream T Id Arme Surface ListPosition ListMine {NewAdvPosSonar AdvPosition ID Ans} MyLife LastMineExplosion}% On traite l'information reçue et on met à joueur la position potentielle de l'adversaire
+	 else
+	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
+	 end
 	 
       [] sayDeath(ID)|T then
 	 {TreatStream T Id Arme Surface ListPosition ListMine {PersonalNewRecord AdvPosition ID.id posType(dead)} MyLife LastMineExplosion} % On met le statut du joueur à 'death'
 	 
       [] sayDamageTaken(ID Damage LifeLeft)|T then
-	 if MyLife > 0 then
+	 if MyLife > 0 andthen ID\=null andthen ID\=nil then
 	    
 	    if LastMineExplosion \=  nil then % Si un adversaire a perdu de la vie et que nous avions enregistrée une mine dans LastMineExplosion, c'est que c'est notre mine qui a provoqué ces dégats. On peut donc en déduire des informations sur la position de l'adversaire
 	       NewAdvPos
 	    in
 	       if ID.id == LastMineExplosion.playerId andthen LifeLeft > 0 then
 		  case AdvPosition.(LastMineExplosion.playerId)
-		  of posType(xRight pt(x:Xr y:Yf)) then % Si on connaissait le x de l'adversaire, on peut en déduire y si l'adversaire a subit 2 dégats et une double position si il a subit un seul dégat
+		  of posType(xRight pt(x:Xr y:_)) then % Si on connaissait le x de l'adversaire, on peut en déduire y si l'adversaire a subit 2 dégats et une double position si il a subit un seul dégat
 		     if LastMineExplosion.minePlace.x == Xr andthen Damage==2 then
 			NewAdvPos={PersonalNewRecord AdvPosition ID.id posType(tracked pt(x:Xr y:LastMineExplosion.minePlace.y))}
 		     elseif LastMineExplosion.minePlace.x == Xr andthen Damage==1 then
@@ -933,7 +936,7 @@ in
 		     else
 			NewAdvPos=AdvPosition
 		     end
-		  [] posType(yRight pt(x:Xf y:Yr)) then % Si on connaissait le y de l'adversaire, on peut en déduire x si l'adversaire a subit 2 dégats et une double position si il a subit un seul dégat
+		  [] posType(yRight pt(x:_ y:Yr)) then % Si on connaissait le y de l'adversaire, on peut en déduire x si l'adversaire a subit 2 dégats et une double position si il a subit un seul dégat
 		     if LastMineExplosion.minePlace.y == Yr andthen Damage==2 then
 			NewAdvPos={PersonalNewRecord AdvPosition ID.id posType(tracked pt(x:LastMineExplosion.minePlace.x y:Yr))}
 		     elseif LastMineExplosion.minePlace.y == Yr andthen Damage==1 then

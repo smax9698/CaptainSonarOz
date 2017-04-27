@@ -2,13 +2,11 @@ functor
 import
    GUI
    Input
-   System
    PlayerManager
    Browser
    OS
 define
    Browse=Browser.browse
-   Show=System.show
    PortGUI
    PortPlayers
    BuildLifeRecord
@@ -119,10 +117,7 @@ in
 
    %renvoie un nouveau record à partir de R ou la valeur contenue en Feat est remplacée par Val
    fun{PersonalNewRecord R Feat Val}
-      PNRSub NewR
-   in
-      PNRSub = {Record.subtract R Feat}
-      NewR = {AdjoinAt R Feat Val}
+      {AdjoinAt R Feat Val}
    end
 
    %Démare le serverLife (utile dans la version simultanée)
@@ -211,7 +206,7 @@ in
 			{Wait Id6}
 			if Id6 == null then {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
 			elseif {Value.isDet KindItem} then
-			   if KindItem \= nil then
+			   if KindItem \= null then
                               %say to other player that he charge
 			      {Sender sayCharge(Id6 KindItem) Life}
 			   end
@@ -223,7 +218,7 @@ in
 			NewLifeAfterMine={MakeRecord newLifeAfterMine {BuildList 1 Input.nbPlayer}}
 
 	                %Ask fire |7|
-			local Id7 KindFire Msg in
+			local Id7 KindFire in
 			   {Send PortPlayers.ActualP fireItem(Id7 KindFire)}
 			   {Wait Id7}
 			   if Id7 == null then {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
@@ -248,7 +243,7 @@ in
 				    if Life.X > 0 then
 				       Msg in
 				       {Send PortPlayers.X sayMissileExplode(Id7 P Msg)}
-				       if Msg \= nil then
+				       if Msg \= null then
 
 			                  %the player X lost life point
 					  NewLife.X = {Max 0 Life.X-Msg}
@@ -271,7 +266,7 @@ in
 				 end
 
 		              %The case of KindFire is a drone(row)
-			      [] drone(row X) then
+			      [] drone(row _) then
 
 				 {Send PortGUI drone(Id7 KindFire)}
 				 for X in 1..Input.nbPlayer do
@@ -279,7 +274,7 @@ in
 				 in
 				    {Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
 				    {Wait Id}
-				    if(Id \= nil) then
+				    if(Id \= null) then
 				       {Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
 				    end
 
@@ -287,7 +282,7 @@ in
 				 end
 
 		              %The case of KindFire is a drone(column)
-			      [] drone(column Y) then
+			      [] drone(column _) then
 
 				 {Send PortGUI drone(Id7 KindFire)}
 				 for X in 1..Input.nbPlayer do
@@ -295,7 +290,7 @@ in
 				 in
 				    {Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
 				    {Wait Id}
-				    if(Id \= nil) then
+				    if(Id \= null) then
 				       {Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
 				    end
 
@@ -310,14 +305,14 @@ in
 				 in
 				    {Send PortPlayers.X sayPassingSonar(Id Ans)}
 				    {Wait Id}
-				    if(Id \= nil) then
+				    if(Id \= null) then
 				       {Send PortPlayers.ActualP sayAnswerSonar(Id Ans)}
 				    end
 				    NewLife.X=Life.X
 				 end
 
 		              %The case of KindFire is null
-			      [] nil then
+			      [] null then
 				 for X in 1..Input.nbPlayer do
 				    NewLife.X = Life.X
 				 end
@@ -332,7 +327,7 @@ in
 			   {Wait Id8}
 			   if Id8 == null then {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
 			   elseif {Value.isDet Mine} then
-			      if (Mine \= nil) then
+			      if (Mine \= null) then
 				 {Send PortGUI removeMine(Id8 Mine)}
 				 {Send PortGUI explosion(Id8 Mine)}
                                  %say to each player that a mine explode
@@ -342,7 +337,7 @@ in
 				    if NewLife.X > 0 then
 				       {Send PortPlayers.X sayMineExplode(Id8 Mine Msg)}
 		                       %check the response of the player X
-				       if Msg \= nil then
+				       if Msg \= null then
 
 			                  %the player X lost life point
 					  NewLifeAfterMine.X = {Max 0 NewLife.X-Msg}
@@ -388,10 +383,9 @@ in
 
    %version simultanée
    proc{SimultaneousGame ActualP MaxP}
-      X Y Life
+      X Y
    in
       {Send PortLife all(X)} %nombre de joueur encore en vie
-      {Send PortLife long(Life)}
       {Send PortLife life(p:ActualP l:Y)} %vie du joueur actuel
       if  X == 1 then
 	 End.ActualP = 0
@@ -446,7 +440,7 @@ in
 	    {Wait Id6}
 	    if Id6 == null then End.ActualP = 0
 	    elseif {Value.isDet KindItem} then
-	       if KindItem \= nil then
+	       if KindItem \= null then
                   %say to other player that he charge
 		  {Sender sayCharge(Id6 KindItem) Life}
 	       end
@@ -457,7 +451,7 @@ in
 	 {Delay (({OS.rand} mod Input.thinkMin) + (Input.thinkMax-Input.thinkMin))}
 
 	 %Ask fire |9|
-	 local Id7 KindFire Msg Life in
+	 local Id7 KindFire Life in
 	    {Send PortLife long(Life)}
 	    {Send PortPlayers.ActualP fireItem(Id7 KindFire)}
 	    {Wait Id7}
@@ -480,7 +474,7 @@ in
 			{Send PortLife long(Life)}
 			if Lifex > 0 then
 			   {Send PortPlayers.X sayMissileExplode(Id7 P Msg)}
-			   if Msg \= nil then
+			   if Msg \= null then
 
 			      %the player X lost life point
 			      NewLife = {Max 0 Lifex-Msg}
@@ -503,7 +497,7 @@ in
 		  end
 
 	       %The case of KindFire is a drone(row)
-	       [] drone(row X) then
+	       [] drone(row _) then
 
 		  {Send PortGUI drone(Id7 KindFire)}
 		  for X in 1..Input.nbPlayer do
@@ -511,7 +505,7 @@ in
 		     in
 			{Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
 			{Wait Id}
-			if(Id \= nil) then
+			if(Id \= null) then
 			   {Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
 			end
 		     end
@@ -519,7 +513,7 @@ in
 		  end
 
 	       %The case of KindFire is a drone(column)
-	       [] drone(column Y) then
+	       [] drone(column _) then
 
 		  {Send PortGUI drone(Id7 KindFire)}
 		  for X in 1..Input.nbPlayer do
@@ -527,7 +521,7 @@ in
 		     in
 			{Send PortPlayers.X sayPassingDrone(KindFire Id Ans)}
 			{Wait Id}
-			if(Id \= nil) then
+			if(Id \= null) then
 			   {Send PortPlayers.ActualP sayAnswerDrone(KindFire Id Ans)}
 			end
 		     end
@@ -543,14 +537,14 @@ in
 		     in
 			{Send PortPlayers.X sayPassingSonar(Id Ans)}
 			{Wait Id}
-			if(Id \= nil) then
+			if(Id \= null) then
 			   {Send PortPlayers.ActualP sayAnswerSonar(Id Ans)}
 			end
 		     end
 		  end
 
 	       %The case of KindFire is null
-	       [] nil then skip
+	       [] null then skip
 	       end %end case kindfire
 	    end %end if det
 	 end % end local kindfire
@@ -565,7 +559,7 @@ in
 	    {Wait Id8}
 	    if Id8 == null then End.ActualP = 0
 	    elseif {Value.isDet Mine} then
-	       if (Mine \= nil) then
+	       if (Mine \= null) then
 		  {Send PortGUI explosion(Id8 Mine)}
 		  {Send PortGUI removeMine(Id8 Mine)}
                   %say to each player that a mine explode
@@ -580,7 +574,7 @@ in
 			   {Send PortPlayers.X sayMineExplode(Id8 Mine Msg)}
 		           %check the response of the player X
 			   {Wait Msg}
-			   if Msg \=nil then
+			   if Msg \=null then
 			      %the player X lost life point
 			      NewLife = {Max 0 Lifex-Msg}
 			      {Send PortLife newlife(p:X l:NewLife)}
