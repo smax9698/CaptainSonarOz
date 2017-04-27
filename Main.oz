@@ -176,7 +176,8 @@ in
 	 % Check if the submarine can play |1|
 	 local Id2 Ans2 in
 	    {Send PortPlayers.ActualP isSurface(Id2 Ans2)}
-	    if Ans2 then
+	    if Id2 == null then {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
+	    elseif Ans2 then
 	       if TurnAtSurface.ActualP == Input.turnSurface then
 		  %say dive |2|
 		  {Send PortPlayers.ActualP dive}
@@ -190,7 +191,8 @@ in
 	       %Ask choose direction |3|
 	       local Id3 Position3 Direction3 in
 		  {Send PortPlayers.ActualP move(Id3 Position3 Direction3)}
-		  if Direction3 == surface then
+		  if Id3 == null then {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
+		  elseif Direction3 == surface then
 		     %say to other player |4|
 		     {Sender saySurface(Id3) Life}
 		     %say to GUI
@@ -207,7 +209,8 @@ in
 		     local Id6 KindItem in
 			{Send PortPlayers.ActualP chargeItem(Id6 KindItem)}
 			{Wait Id6}
-			if {Value.isDet KindItem} then
+			if Id6 == null then {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
+			elseif {Value.isDet KindItem} then
 			   if KindItem \= nil then
                               %say to other player that he charge
 			      {Sender sayCharge(Id6 KindItem) Life}
@@ -223,7 +226,8 @@ in
 			local Id7 KindFire Msg in
 			   {Send PortPlayers.ActualP fireItem(Id7 KindFire)}
 			   {Wait Id7}
-			   if {Value.isDet KindFire} then
+			   if Id7 == null then {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
+			   elseif {Value.isDet KindFire} then
 
 		              %The case of KindFire is a mine
 			      case KindFire of mine(P) then
@@ -326,7 +330,8 @@ in
 
 			   {Send PortPlayers.ActualP fireMine(Id8 Mine)}
 			   {Wait Id8}
-			   if {Value.isDet Mine} then
+			   if Id8 == null then {TurnByTurnGame ((ActualP mod MaxP)+1) MaxP Life TurnAtSurface}
+			   elseif {Value.isDet Mine} then
 			      if (Mine \= nil) then
 				 {Send PortGUI removeMine(Id8 Mine)}
 				 {Send PortGUI explosion(Id8 Mine)}
@@ -397,7 +402,8 @@ in
 	 local Id2 Ans2 in
 	    %check if the payer is on surface
 	    {Send PortPlayers.ActualP isSurface(Id2 Ans2)}
-	    if Ans2 then
+	    if Id2 == null then End.ActualP = 0
+	    elseif Ans2 then
 
 	       %say dive
 	       {Send PortPlayers.ActualP dive}
@@ -410,7 +416,8 @@ in
 		  %chose direction |3|
 		  {Send PortLife long(Life)}
 		  {Send PortPlayers.ActualP move(Id3 Position3 Direction3)}
-		  if Direction3 == surface then
+		  if Id3 == null then End.ActualP = 0
+		  elseif Direction3 == surface then
 		     %time to wait at surface
 		     {Delay Input.turnSurface*1000}
 		     %say to other player |4|
@@ -437,7 +444,8 @@ in
 	    {Send PortLife long(Life)}
 	    {Send PortPlayers.ActualP chargeItem(Id6 KindItem)}
 	    {Wait Id6}
-	    if {Value.isDet KindItem} then
+	    if Id6 == null then End.ActualP = 0
+	    elseif {Value.isDet KindItem} then
 	       if KindItem \= nil then
                   %say to other player that he charge
 		  {Sender sayCharge(Id6 KindItem) Life}
@@ -453,7 +461,8 @@ in
 	    {Send PortLife long(Life)}
 	    {Send PortPlayers.ActualP fireItem(Id7 KindFire)}
 	    {Wait Id7}
-	    if {Value.isDet KindFire} then
+	    if Id7 == null then End.ActualP = 0
+	    elseif {Value.isDet KindFire} then
                %The case of KindFire is a mine
 	       case KindFire of mine(P) then
 		  {Sender sayMinePlaced(Id7) Life}
@@ -554,7 +563,8 @@ in
 
 	    {Send PortPlayers.ActualP fireMine(Id8 Mine)}
 	    {Wait Id8}
-	    if {Value.isDet Mine} then
+	    if Id8 == null then End.ActualP = 0
+	    elseif {Value.isDet Mine} then
 	       if (Mine \= nil) then
 		  {Send PortGUI explosion(Id8 Mine)}
 		  {Send PortGUI removeMine(Id8 Mine)}
