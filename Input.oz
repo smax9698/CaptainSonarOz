@@ -83,7 +83,7 @@ in
    % 	  [1 0 1 0 1]
    % 	  [1 0 0 0 1]]
 
-   Map = {MapGenerator NRow NColumn 15}
+  Map = {MapGenerator NRow NColumn 15}
 
 %%%% Players description %%%%
 

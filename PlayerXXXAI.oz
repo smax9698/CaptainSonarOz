@@ -623,7 +623,9 @@ in
       end
       Ans
    end
-   
+
+
+
    % Décide de faire exploser ou non une de nos mines
    fun{ExplodeMine ListMine Pos AdvSt}
       case ListMine
@@ -639,7 +641,7 @@ in
 	    PId={PlayerNearMine AdvSt H} % Sinon si un joueur est 'potentiellement' près d'une de nos mine, on peut décider de la faire exploser
 	    % Si le joueur est touché on pourra en tirer des informations sur sa position
 	    if {Dist Pos H}>1 andthen {OS.rand} mod 1 == 0 andthen PId > 0 then
-	       explodeMine(minePlace:H playerId:PId)
+		  explodeMine(minePlace:H playerId:PId)
 	    elseif {Dist Pos H}>1 andthen {OS.rand} mod 25 == 0 then
 	       explodeMine(minePlace:H playerId:0)
 	    else
