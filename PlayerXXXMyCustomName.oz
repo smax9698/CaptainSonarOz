@@ -227,8 +227,7 @@ in
 	 Fire=sonar
       elseif Arme.missile >= Input.missile then
 	 Fire=missile({FindPlaceForFire {Max 2 Input.minDistanceMissile} Input.maxDistanceMissile Position})
-	 {Browse fireMissile|Position|Fire}
-	 {Delay 300}
+
       elseif Arme.drone >= Input.drone then
 	 Fire=drone(row (({OS.rand} mod Input.nRow)+1))
       elseif Arme.mine >= Input.mine then
