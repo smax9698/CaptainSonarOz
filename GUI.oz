@@ -24,6 +24,8 @@ define
    DrawSubmarine
    MoveSubmarine
    DrawMine
+   DrawDrone
+   DrawSonar
    RemoveMine
    DrawExplosion
    RemoveExplosion
@@ -46,6 +48,8 @@ define
    WaterImg
    MineImg
    TerreImg
+   DroneImg
+   SonarImg
    ExplosionImg1
    ExplosionImg2
    ExplosionImg3
@@ -68,6 +72,8 @@ in
    WaterImg = {QTk.newImage photo(file:'img/mer.gif' width:W height:H format:gif)}
    TerreImg = {QTk.newImage photo(file:'img/sol.gif' width:W height:H format:gif)}
    MineImg = {QTk.newImage photo(file:'img/mine2.gif' width:W height:H format:gif)}
+   DroneImg = {QTk.newImage photo(file:'img/drone.gif' width:W height:H format:gif)}
+   SonarImg = {QTk.newImage photo(file:'img/sonar.gif' width:W height:H format:gif)}
    ExplosionImg1 = {QTk.newImage photo(file:'img/explosion1.gif' width:W height:H format:gif)}
    ExplosionImg2 = {QTk.newImage photo(file:'img/explosion2.gif' width:W height:H format:gif)}
    ExplosionImg3 = {QTk.newImage photo(file:'img/explosion3.gif' width:W height:H format:gif)}
@@ -396,6 +402,60 @@ in
       end
    end
 
+    fun{DrawSonar Grid WantedID State}
+      case State
+      of nil then nil
+      [] guiPlayer(id:ID score:HandleScore submarine:Handle mines:M path:P)|Next then
+	 if (ID.id == WantedID.id) then
+		{Handle set(image:SonarImg)}
+		{Handle 'raise'()}
+	    {Delay 1000}
+	    {Handle set(image:SubmarineImg)}
+	    Next
+	 else
+	    State.1|{DrawSonar Grid WantedID Next}
+	 end
+      end
+   end
+
+   fun{DrawDrone Drone}
+      case Drone
+      of drone(row X) then
+	 fun{$ Grid State}
+
+	    ID HandleScore Handle Mine Path LabelDrone
+	    HandleDrone Y
+	 in
+	    guiPlayer(id:ID score:HandleScore submarine:Handle mines:Mine path:Path) = State
+	    Y =0
+	    LabelDrone = label(handle:HandleDrone width:60 height:60 image:DroneImg bg: ID.color)
+	    {Grid.grid configure(LabelDrone row:X+1+1 column:Y+1)}
+	    {HandleDrone 'raise'()}
+	    {Handle 'raise'()}
+	    {Delay 1000}
+	    {Grid.grid forget(HandleDrone)}
+	    State
+	 end
+	 
+      [] drone(column Y) then
+	 fun{$ Grid State}
+
+	    ID HandleScore Handle Mine Path LabelDrone
+	    HandleDrone X
+	 in
+	    guiPlayer(id:ID score:HandleScore submarine:Handle mines:Mine path:Path) = State
+	    X =0
+	    LabelDrone = label(handle:HandleDrone width:60 height:60 image:DroneImg bg: ID.color)
+	    {Grid.grid configure(LabelDrone row:X+1 column:Y+1+1)}
+	    {HandleDrone 'raise'()}
+	    {Handle 'raise'()}
+	    {Delay 1000}
+	    {Grid.grid forget(HandleDrone)}
+	    State
+	 end
+      end
+   end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
    fun{StartWindow}
@@ -435,10 +495,12 @@ in
 	 {TreatStream T Grid {StateModification Grid ID State {DrawExplosion Position}}}
       [] drone(ID Drone)|T then
 	 {Play drone}
-	 {TreatStream T Grid State}
+	 
+	 {TreatStream T Grid {StateModification Grid ID State {DrawDrone Drone}}}
       [] sonar(ID)|T then
 	 {Play sonar}
-	 {TreatStream T Grid State}
+	 
+	 {TreatStream T Grid {DrawSonar Grid ID State}}
       [] stop|T then
 	 {Play endofgame}
       [] _|T then

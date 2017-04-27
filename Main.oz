@@ -269,6 +269,8 @@ in
 		              %The case of KindFire is a drone(row)
 			      [] drone(row X) then
 
+				 {Send PortGUI drone(Id7 KindFire)}
+				 {Browse KindFire}
 				 for X in 1..Input.nbPlayer do
 				    Id Ans
 				 in
@@ -284,6 +286,8 @@ in
 		              %The case of KindFire is a drone(column)
 			      [] drone(column Y) then
 
+				 {Send PortGUI drone(Id7 KindFire)}
+				 {Browse KindFire}
 				 for X in 1..Input.nbPlayer do
 				    Id Ans
 				 in
@@ -298,7 +302,7 @@ in
 
 		              %The case of KindFire is a sonar
 			      [] sonar then
-
+				 {Send PortGUI sonar(Id7)}
 				 for X in 1..Input.nbPlayer do
 				    Id Ans
 				 in
@@ -495,6 +499,7 @@ in
 	       %The case of KindFire is a drone(row)
 	       [] drone(row X) then
 
+		  {Send PortGUI drone(Id7 KindFire)}
 		  for X in 1..Input.nbPlayer do
 		     local Id Ans
 		     in
@@ -510,6 +515,7 @@ in
 	       %The case of KindFire is a drone(column)
 	       [] drone(column Y) then
 
+		  {Send PortGUI drone(Id7 KindFire)}
 		  for X in 1..Input.nbPlayer do
 		     local Id Ans
 		     in
@@ -525,6 +531,7 @@ in
 	       %The case of KindFire is a sonar
 	       [] sonar then
 
+		  {Send PortGUI sonar(Id7)}
 		  for X in 1..Input.nbPlayer do
 		     local Id Ans
 		     in
