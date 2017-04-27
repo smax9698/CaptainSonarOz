@@ -624,6 +624,7 @@ in
 
 
    {Browse begin}
+   {Send PortGUI start}
    if Input.isTurnByTurn then
       %jeu tour par tour
       {Delay 3000}

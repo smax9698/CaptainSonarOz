@@ -240,6 +240,7 @@ in
 		[]mine then Args = 'sound/mine.mp3'|nil
 		[]sonar then Args = 'sound/sonar.mp3'|nil
 		[]endofgame then Args= 'sound/endofgame.mp3'|nil
+		[] start then Args = 'sound/debut.mp3'|nil
 		end
 
 
@@ -411,7 +412,7 @@ in
 		{Handle 'raise'()}
 	    {Delay 1000}
 	    {Handle set(image:SubmarineImg)}
-	    Next
+	    State
 	 else
 	    State.1|{DrawSonar Grid WantedID Next}
 	 end
@@ -494,15 +495,17 @@ in
       [] explosion(ID Position)|T then
 	 {TreatStream T Grid {StateModification Grid ID State {DrawExplosion Position}}}
       [] drone(ID Drone)|T then
-	 {Play drone}
-	 
+	 {Play drone}	 
 	 {TreatStream T Grid {StateModification Grid ID State {DrawDrone Drone}}}
       [] sonar(ID)|T then
-	 {Play sonar}
-	 
+	 {Play sonar}	 
 	 {TreatStream T Grid {DrawSonar Grid ID State}}
       [] stop|T then
 	 {Play endofgame}
+	 {TreatStream T Grid State}
+      [] start|T then
+	 {Play start}
+	 {TreatStream T Grid State}
       [] _|T then
 	 {TreatStream T Grid State}
       end
