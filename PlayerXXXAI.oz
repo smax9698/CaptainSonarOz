@@ -577,8 +577,6 @@ in
 	 Pt = {PositionPlayerToTarget {Max 2 Input.minDistanceMissile} Input.maxDistanceMissile AdvSt Position}
 	 if Arme.missile >= Input.missile andthen Pt \= nil then % On regarde si un joueur est atteignable
 	    Fire=missile(Pt)
-	    {Browse fireMissileAdvanced|Position|Pt}
-	    {Delay 300}
 	 elseif Arme.mine >= Input.mine then
 	    Fire=mine({FindPlaceForFire Input.minDistanceMine Input.maxDistanceMine Position})
 	 elseif Arme.sonar >= Input.sonar then

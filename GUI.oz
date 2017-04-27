@@ -384,7 +384,6 @@ in
 	 if (ID.id == WantedID.id) then
 		{Handle set(image:SubmarineBrokenImg)}
 		{Handle 'raise'()}
-		{Delay 1000}
 	    {HandleScore set(0)}
 	    {RemoveItem Grid Handle}
 	    for H in P do
