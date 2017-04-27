@@ -625,13 +625,12 @@ in
 
    {Browse begin}
    {Send PortGUI start}
+   {Delay 6000}
    if Input.isTurnByTurn then
       %jeu tour par tour
-      {Delay 3000}
       {TurnByTurnGame 1 Input.nbPlayer {BuildLifeRecord Input.nbPlayer} {BuildTurnAtSurfaceCounter Input.nbPlayer}}
    else
       %jeu simultané
-      {Delay 3000}
       PortLife = {StartServerLife}
       End = {MakeRecord endlist {BuildList 1 Input.nbPlayer}}
       for X in 1..Input.nbPlayer do
