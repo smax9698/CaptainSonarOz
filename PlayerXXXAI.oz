@@ -349,7 +349,7 @@ in
       elseif {CheckPosition ListPos.1.x ListPos.1.y-1} andthen {CheckList ListPos pt(x:ListPos.1.x y:(ListPos.1.y-1))}==false then % Sinon on essaie d'aller vers la gauche
 	 Dir = west
       else % Si ce n'est pas possible, on essaie de monter ou de descendre. Si on trouve se dans le bas de la carte on essaie d'abord de monter et puis de descendre et inversement
-	 if ListPos.1.x <= (Input.nRow div 2) then
+	 if ListPos.1.x =< (Input.nRow div 2) then
 	    if {CheckPosition ListPos.1.x+1 ListPos.1.y} andthen {CheckList ListPos pt(x:(ListPos.1.x+1) y:ListPos.1.y)}==false then
 	       Dir=south
 	    elseif {CheckPosition ListPos.1.x-1 ListPos.1.y} andthen {CheckList ListPos pt(x:(ListPos.1.x-1) y:ListPos.1.y)}==false then
@@ -412,8 +412,8 @@ in
 	 end
 	 % Si tous les joueurs sont 'tracked' on charge que des mines et des missiles
       elseif ({PlayerStatus AdvStatus tracked} andthen {PlayerStatus AdvStatus double} == false andthen ({PlayerStatus AdvStatus xRight} == false andthen {PlayerStatus AdvStatus yRight})) == false then
-	 R = {OS.rand} mod 2
-	 if R == 0 then
+	 R = {OS.rand} mod 3
+	 if R =< 1 then
 	    {PersonalNewRecord ArmeRecord missile ArmeRecord.missile+1}
 	 else
 	    {PersonalNewRecord ArmeRecord mine ArmeRecord.mine+1}
