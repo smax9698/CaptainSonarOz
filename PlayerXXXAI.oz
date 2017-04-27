@@ -719,6 +719,8 @@ in
 	    ID=Id
 	    {TreatStream T Id NewArme Surface ListPosition ListMine AdvPosition MyLife nil}
 	 else
+	    KindItem=nil
+	    ID=nil
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 	 end
 	 
@@ -772,7 +774,7 @@ in
 	       end
 	    
 	    else 
-	       {TreatStream T Id Arme Surface ListPosition ListMine {MoveAdv AdvPosition ID Dir} MyLife LastMineExplosion}
+	       {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
 	    end
 	 else % On modifie la position potentielle de l'adversaire
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
@@ -906,6 +908,7 @@ in
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
 	 else
 	    Ans = false
+	    ID = nil
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
 	 end
 	 
@@ -960,4 +963,3 @@ in
       end
    end
 end
-

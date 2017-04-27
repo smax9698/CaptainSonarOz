@@ -270,7 +270,6 @@ in
 			      [] drone(row X) then
 
 				 {Send PortGUI drone(Id7 KindFire)}
-				 {Browse KindFire}
 				 for X in 1..Input.nbPlayer do
 				    Id Ans
 				 in
@@ -287,7 +286,6 @@ in
 			      [] drone(column Y) then
 
 				 {Send PortGUI drone(Id7 KindFire)}
-				 {Browse KindFire}
 				 for X in 1..Input.nbPlayer do
 				    Id Ans
 				 in
@@ -485,7 +483,6 @@ in
 
 			      if NewLife == 0 then
 			         %The player X is dead
-				 {Browse IdPlayers.X|deadonmissile|P}
 				 {Sender sayDeath(IdPlayers.X) Life}
 
 				 {Send PortGUI removePlayer(IdPlayers.X)}
@@ -585,7 +582,6 @@ in
 
 			      if NewLife == 0 then
 			         %The player X is dead
-				 {Browse IdPlayers.X|deadonmine|Mine}
 				 {Sender sayDeath(IdPlayers.X) Life}
 				 {Send PortGUI removePlayer(IdPlayers.X)}
 			      end
@@ -644,14 +640,14 @@ in
    end
 
 
-   {Delay 1000}
+   {Delay 3000}
    for U in 1..Input.nbPlayer do
       {Send PortPlayers.U nil}
    end
 
    {Send PortGUI stop}
    {Send PortGUI nil}
-   {Delay 2000}
+   {Delay 3000}
 
    {Browse 'the END'}
 end

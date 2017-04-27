@@ -70,40 +70,40 @@ in
 
 %%%% Description of the map %%%%
 
-   NRow = 9
-   NColumn = 14
+   NRow = 5
+   NColumn = 5
 
    % Map = [[0 0 0]
    % 	  [0 0 0]
    %      [0 0 0]]
 
-   % Map = [[0 0 0 0 1]
-   % 	  [1 0 0 0 0]
-   % 	  [1 0 0 0 1]
-   % 	  [1 0 1 0 1]
-   % 	  [1 0 0 0 1]]
+   Map = [[0 0 0 0 1]
+   	  [1 0 0 0 0]
+   	  [1 0 0 0 1]
+   	  [1 0 1 0 1]
+   	  [1 0 0 0 1]]
 
-   % Map = {MapGenerator NRow NColumn 15}
+   %Map = {MapGenerator NRow NColumn 15}
 
-   Map = [
-   	 [0 0 1 1 1 0 1 1 0 1 1 0 0 0]
-   	 [0 0 0 1 0 0 1 1 1 1 1 0 0 0]
-   	 [0 0 0 1 0 0 0 1 1 1 0 0 0 0]
-   	 [0 0 1 1 1 0 0 0 1 0 0 0 0 0]
-   	 [0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-   	 [0 0 1 1 1 1 0 1 1 1 1 0 0 0]
-   	 [0 0 1 0 0 1 0 0 0 1 0 0 0 0]
-   	 [0 0 1 0 0 1 0 0 1 0 0 0 0 0]
-   	 [0 0 1 1 1 1 0 1 1 1 1 0 0 0]
+   % Map = [
+   % 	 [0 0 1 1 1 0 1 1 0 1 1 0 0]
+   % 	 [0 0 0 1 0 0 1 1 1 1 1 0 0]
+   % 	 [0 0 0 1 0 0 0 1 1 1 0 0 0]
+   % 	 [0 0 1 1 1 0 0 0 1 0 0 0 0]
+   % 	 [0 0 0 0 0 0 0 0 0 0 0 0 0]
+   % 	 [0 0 1 1 1 1 0 1 1 1 1 0 0]
+   % 	 [0 0 0 0 0 1 0 0 0 1 0 0 0]
+   % 	 [0 0 1 0 0 1 0 0 1 0 0 0 0]
+   % 	 [0 0 1 1 1 1 0 1 1 1 1 0 0]
 	    
-   	    ]
+   % 	    ]
 
 
 %%%% Players description %%%%
 
-   NbPlayer = 4
-   Players = [advancedAI basicAI basicAI basicAI]
-   Colors = [green yellow red blue]
+   NbPlayer = 5
+   Players = [advancedAI advancedAI advancedAI basicAI basicAI]
+   Colors = [green yellow red blue c(100 120 40)]
 
 %%%% Thinking parameters (only in simultaneous) %%%%
 
@@ -116,7 +116,7 @@ in
 
 %%%% Life %%%%
 
-   MaxDamage = 4
+   MaxDamage = 2
 
 %%%% Number of load for each item %%%%
 
