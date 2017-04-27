@@ -688,7 +688,7 @@ in
 	 if MyLife > 0 then
 	    Ans=Surface ID=Id
 	 else
-	    Ans=false ID=nil
+	    Ans=false ID=null
 	 end
 	 {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 
@@ -707,7 +707,7 @@ in
 	 else
 	    Dir = nil
 	    Pos = nil
-	    ID = nil
+	    ID = null
 	    {TreatStream T Id Arme (Dir==surface) ListPosition ListMine AdvPosition MyLife nil}
 	 end
 	 
@@ -720,7 +720,7 @@ in
 	    {TreatStream T Id NewArme Surface ListPosition ListMine AdvPosition MyLife nil}
 	 else
 	    KindItem=nil
-	    ID=nil
+	    ID=null
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 	 end
 	 
@@ -737,7 +737,7 @@ in
 	    end
 	 else
 	    KindFire = nil
-	    ID=nil
+	    ID=null
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 	 end
 
@@ -761,18 +761,17 @@ in
 	    end
 	 else
 	    Mine = nil
-	    ID = nil
+	    ID = null
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 	 end
       [] sayMove(ID Dir)|T then
 	 if MyLife > 0 then
-	    if ID \= nil then
+	    if ID \= null then
 	       if ID.id == Id.id then
 		  {TreatStream T Id Arme Surface ListPosition ListMine {MoveAdv AdvPosition ID Dir} MyLife nil}
 	       else
 		  {TreatStream T Id Arme Surface ListPosition ListMine {MoveAdv AdvPosition ID Dir} MyLife LastMineExplosion}
 	       end
-	    
 	    else 
 	       {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
 	    end
@@ -810,7 +809,7 @@ in
 	    case Pos of pt(x:X y:Y) then
 	       Distance = ({Abs X-ListPosition.1.x} + {Abs Y-ListPosition.1.y})
 	       if Distance>=2 then
-		  Message= nil
+		  Message=nil
 	       elseif Distance==1 then
 		  Message = 1
 	       else
@@ -823,13 +822,12 @@ in
 	       {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 	    end
 	 else
-	    Message = nil
+	    Message = null
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 	 end
 	 
       [] sayMineExplode(ID Pos Message)|T then
 	 if MyLife > 0 then
-	    
 	    Distance
 	 in
 	  %check if we are touch by the explosion
@@ -866,8 +864,8 @@ in
 	       end
 	    end
 	 else
-	    Message=nil
-	    ID=nil
+	    Message=null
+	    ID=null
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 	 end
 	 
@@ -883,7 +881,7 @@ in
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
 	 else
 	    Ans = false
-	    ID = nil
+	    ID = null
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
 	 end
 	 
@@ -908,7 +906,7 @@ in
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
 	 else
 	    Ans = false
-	    ID = nil
+	    ID = null
 	    {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
 	 end
 	 

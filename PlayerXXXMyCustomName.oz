@@ -272,7 +272,7 @@ in
 	    ID=Id
 	    {TreatStream T Id Arme Surface Pos|ListPosition ListMine MyLife}
 	 else
-	    ID=nil
+	    ID=null
 	    {TreatStream T Id Arme Surface Pos|ListPosition ListMine MyLife}
 	 end
 
@@ -291,7 +291,7 @@ in
 	    {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 	 else
 	    Ans = false
-	    ID=nil
+	    ID=null
 	    {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 	 end
 
@@ -310,7 +310,7 @@ in
 	 else
 	    Dir = nil
 	    Pos = nil
-	    ID = nil
+	    ID = null
 	    {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 	 end
 
@@ -323,7 +323,7 @@ in
 	    {TreatStream T Id NewArme Surface ListPosition ListMine MyLife}
 	 else
 	    KindItem = nil
-	    ID = nil
+	    ID = null
 	    {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 	 end
 	 
@@ -341,7 +341,7 @@ in
 	    end
 	 else
 	    KindFire = nil
-	    ID = nil
+	    ID = null
 	    {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 	 end
 	 
@@ -357,7 +357,7 @@ in
 	    end
 	 else
 	    Mine = nil
-	    ID = nil
+	    ID = null
 	    {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 	 end
 	 
@@ -397,7 +397,7 @@ in
 	    end
 	 
 	 else
-	    Message = nil
+	    Message = null
 	    {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 	 end
 	 
@@ -424,6 +424,7 @@ in
 	    end
 	 
 	 else
+	    Message=null
 	    {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 	 end
 
@@ -438,7 +439,7 @@ in
 	    ID = Id
 	    {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 	 else
-	    ID = nil
+	    ID = null
 	    {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 	 end
 
@@ -462,7 +463,7 @@ in
 	    {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 	 else
 	    Ans = false
-	    ID = nil
+	    ID = null
 	    {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 	 end
 
