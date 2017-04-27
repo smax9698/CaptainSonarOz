@@ -429,7 +429,7 @@ in
 	    guiPlayer(id:ID score:HandleScore submarine:Handle mines:Mine path:Path) = State
 	    Y =0
 	    LabelDrone = label(handle:HandleDrone width:60 height:60 image:DroneImg bg: ID.color)
-	    {Grid.grid configure(LabelDrone row:X+1+1 column:Y+1)}
+	    {Grid.grid configure(LabelDrone row:X+1 column:Y+1)}
 	    {HandleDrone 'raise'()}
 	    {Handle 'raise'()}
 	    {Delay 1000}
@@ -446,7 +446,7 @@ in
 	    guiPlayer(id:ID score:HandleScore submarine:Handle mines:Mine path:Path) = State
 	    X =0
 	    LabelDrone = label(handle:HandleDrone width:60 height:60 image:DroneImg bg: ID.color)
-	    {Grid.grid configure(LabelDrone row:X+1 column:Y+1+1)}
+	    {Grid.grid configure(LabelDrone row:X+1 column:Y+1)}
 	    {HandleDrone 'raise'()}
 	    {Handle 'raise'()}
 	    {Delay 1000}
