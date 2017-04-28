@@ -471,6 +471,7 @@ in
 			   case Msg of sayDamageTaken(_ _ LifeLeft) then
 			      {Sender Msg Life}
 			      {Send PortLife newlife(p:X l:LifeLeft)}
+			      {Send PortGUI updateLife(IdPlayers.X LifeLeft)}
 			   [] sayDeath(_) then
 			      {Sender Msg Life}
 			      {Send PortLife newlife(p:X l:0)}

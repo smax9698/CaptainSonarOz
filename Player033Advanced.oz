@@ -638,7 +638,7 @@ in
 	    % Si le joueur est touché on pourra en tirer des informations sur sa position
 	    if {Dist Pos H}>1 andthen {OS.rand} mod 1 == 0 andthen PId > 0 then
 	       explodeMine(minePlace:H playerId:PId)
-	    elseif {Dist Pos H}>1 andthen {OS.rand} mod 25 == 0 then
+	    elseif {Dist Pos H}>1 andthen {OS.rand} mod 10025 == 0 then
 	       explodeMine(minePlace:H playerId:0)
 	    else
 	       {ExplodeMine T Pos AdvSt}

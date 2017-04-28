@@ -66,7 +66,7 @@ in
 
 %%%% Style of game %%%%
 
-   IsTurnByTurn = false
+   IsTurnByTurn = true
 
 %%%% Description of the map %%%%
 
@@ -116,7 +116,7 @@ in
 
 %%%% Life %%%%
 
-   MaxDamage = 2
+   MaxDamage = 4
 
 %%%% Number of load for each item %%%%
 
