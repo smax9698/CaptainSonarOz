@@ -382,17 +382,26 @@ in
 	       if Distance>=2 then
 		  Message=null
 	       elseif Distance==1 then
-		  Message = 1
+		  if {Max MyLife-1 0} > 0 then
+		     Message = sayDamageTaken(Id 1 MyLife-1)
+		  else
+		     Message = sayDeath(Id)
+		  end
 	       else
-		  Message = 2
+		  if {Max MyLife-2 0} > 0 then
+		     Message = sayDamageTaken(Id 2 MyLife-2)
+		  else
+		     Message = sayDeath(Id)
+		  end
 	       end
 	    end
-	    if Message \= null then
-	       {TreatStream T Id Arme Surface ListPosition ListMine {Max 0 MyLife-Message}}
+	    case Message of sayDamageTaken(_ _ Ll) then
+	       {TreatStream T Id Arme Surface ListPosition ListMine Ll}
+	    [] sayDeath(_) then
+	       {TreatStream T Id Arme Surface ListPosition ListMine 0}
 	    else
 	       {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
-	    end
-	 
+	    end	 
 	 else
 	    Message = null
 	    {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
@@ -409,17 +418,28 @@ in
 	       if(Distance>=2) then
 		  Message = null
 	       elseif(Distance==1) then
-		  Message = 1
+		  if {Max MyLife-1 0} > 0 then
+		     Message = sayDamageTaken(Id 1 MyLife-1)
+		  else
+		     Message = sayDeath(Id)
+		  end
 	       else
-		  Message = 2
+		  if {Max MyLife-2 0} > 0 then
+		     Message = sayDamageTaken(Id 2 MyLife-2)
+		  else
+		     Message = sayDeath(Id)
+		  end
 	       end
 	    end
-	    if Message \= null then
-	       {TreatStream T Id Arme Surface ListPosition ListMine {Max 0 MyLife-Message}}
+
+	    case Message of sayDamageTaken(_ _ Ll) then
+	       {TreatStream T Id Arme Surface ListPosition ListMine Ll}
+	    [] sayDeath(_) then
+	       {TreatStream T Id Arme Surface ListPosition ListMine 0}
 	    else
 	       {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 	    end
-	 
+	    
 	 else
 	    Message=null
 	    {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
@@ -467,10 +487,7 @@ in
       [] sayAnswerSonar(_ _)|T then
 	 {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 
-      [] sayDeath(ID)|T then
-	 if ID.id == Id.id then
-	    {Browse deadAt|ListPosition.1}
-	 end
+      [] sayDeath(_)|T then
 	 {TreatStream T Id Arme Surface ListPosition ListMine MyLife}
 
       [] sayDamageTaken(_ _ _)|T then

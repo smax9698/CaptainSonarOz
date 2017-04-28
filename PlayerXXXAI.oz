@@ -637,7 +637,7 @@ in
 	    PId={PlayerNearMine AdvSt H} % Sinon si un joueur est 'potentiellement' près d'une de nos mine, on peut décider de la faire exploser
 	    % Si le joueur est touché on pourra en tirer des informations sur sa position
 	    if {Dist Pos H}>1 andthen {OS.rand} mod 1 == 0 andthen PId > 0 then
-		  explodeMine(minePlace:H playerId:PId)
+	       explodeMine(minePlace:H playerId:PId)
 	    elseif {Dist Pos H}>1 andthen {OS.rand} mod 25 == 0 then
 	       explodeMine(minePlace:H playerId:0)
 	    else
@@ -807,13 +807,24 @@ in
 	       if Distance>=2 then
 		  Message=null
 	       elseif Distance==1 then
-		  Message = 1
+		  if {Max MyLife-1 0} > 0 then
+		     Message = sayDamageTaken(Id 1 MyLife-1)
+		  else
+		     Message = sayDeath(Id)
+		  end
+		  
 	       else
-		  Message = 2
+		  if {Max MyLife-2 0} > 0 then
+		     Message = sayDamageTaken(Id 2 MyLife-2)
+		  else
+		     Message = sayDeath(Id)
+		  end
 	       end
 	    end
-	    if Message \= null then
-	       {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition {Max MyLife-Message 0} nil}
+	    case Message of sayDamageTaken(_ _ LL) then
+	       {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition LL nil}
+	    [] sayDeath(_) then
+	       {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition 0 nil}
 	    else
 	       {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 	    end
@@ -832,29 +843,45 @@ in
 	       if(Distance>=2) then
 		  Message = null
 	       elseif(Distance==1) then
-		  Message = 1
+		  if {Max MyLife-1 0} > 0 then
+		     Message = sayDamageTaken(Id 1 MyLife-1)
+		  else
+		     Message = sayDeath(Id)
+		  end
 	       else
-		  Message = 2
+		  if {Max MyLife-2 0} > 0 then
+		     Message = sayDamageTaken(Id 2 MyLife-2)
+		  else
+		     Message = sayDeath(Id)
+		  end
 	       end
 	    end
 
 	    if LastMineExplosion \= nil then
 	       if Pos == LastMineExplosion.minePlace then % Si la mine qui a explosée était la notre on laisse LastMineExplosion sinon on met cette variable à nil
-		  if Message \= null then
-		     {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition {Max MyLife-Message 0} LastMineExplosion}
+		  case Message of sayDamageTaken(_ _ LL) then
+		     {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition LL LastMineExplosion}
+		  [] sayDeath(_) then
+		     {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition 0 LastMineExplosion}
 		  else
 		     {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife LastMineExplosion}
 		  end
+		  
 	       else
-		  if Message \= null then
-		     {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition {Max MyLife-Message 0} nil}
+
+		  case Message of sayDamageTaken(_ _ LL) then
+		     {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition LL nil}
+		  [] sayDeath(_) then
+		     {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition 0 nil}
 		  else
 		     {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 		  end
 	       end	    
 	    else
-	       if Message \= null then
-		  {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition {Max MyLife-Message 0} nil}
+	       case Message of sayDamageTaken(_ _ LL) then
+		  {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition LL nil}
+	       [] sayDeath(_) then
+		  {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition 0 nil}
 	       else
 		  {TreatStream T Id Arme Surface ListPosition ListMine AdvPosition MyLife nil}
 	       end

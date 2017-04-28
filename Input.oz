@@ -70,20 +70,20 @@ in
 
 %%%% Description of the map %%%%
 
-   NRow = 5
-   NColumn = 5
+   NRow = 9
+   NColumn = 9
 
    % Map = [[0 0 0]
    % 	  [0 0 0]
    %      [0 0 0]]
 
-   Map = [[0 0 0 0 1]
-   	  [1 0 0 0 0]
-   	  [1 0 0 0 1]
-   	  [1 0 1 0 1]
-   	  [1 0 0 0 1]]
+   % Map = [[0 0 0 0 1]
+   % 	  [1 0 0 0 0]
+   % 	  [1 0 0 0 1]
+   % 	  [1 0 1 0 1]
+   % 	  [1 0 0 0 1]]
 
-   %Map = {MapGenerator NRow NColumn 15}
+   Map = {MapGenerator NRow NColumn 15}
 
    % Map = [
    % 	 [0 0 1 1 1 0 1 1 0 1 1 0 0]
@@ -101,9 +101,9 @@ in
 
 %%%% Players description %%%%
 
-   NbPlayer = 5
-   Players = [advancedAI advancedAI advancedAI basicAI basicAI]
-   Colors = [green yellow red blue c(100 120 40)]
+   NbPlayer = 4
+   Players = [advancedAI advancedAI basicAI basicAI]
+   Colors = [green yellow red blue]
 
 %%%% Thinking parameters (only in simultaneous) %%%%
 

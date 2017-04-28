@@ -139,6 +139,7 @@ in
    %ServerLife (utile dans la version simultanée)
    %Il reçoit les mise à jour des points de vie ainsi que les demandes d'état de la vie des joueurs
    proc{ServerLife Msg Life NumberInLife}
+
       case Msg of all(X)|T then
 	 X = NumberInLife
 	 {ServerLife T Life NumberInLife}
@@ -154,6 +155,8 @@ in
 	 else
 	    {ServerLife T {PersonalNewRecord Life X L} NumberInLife}
 	 end
+      [] _|T then
+	 {ServerLife T Life NumberInLife}
       end
    end
 
@@ -238,28 +241,23 @@ in
 				 {Send PortGUI explosion(Id7 P)}
 				 for X in 1..Input.nbPlayer do
 
-
 			               %check the answer of the player X
 				    if Life.X > 0 then
 				       Msg in
 				       {Send PortPlayers.X sayMissileExplode(Id7 P Msg)}
-				       if Msg \= null then
 
-			                  %the player X lost life point
-					  NewLife.X = {Max 0 Life.X-Msg}
-					  {Sender sayDamageTaken(IdPlayers.X Msg NewLife.X) Life}
-					  if NewLife.X > 0 then
-					     {Send PortGUI lifeUpdate(IdPlayers.X NewLife.X)}
-					  end
-
-					  if NewLife.X == 0 then
-			                     %The player X is dead
-					     {Sender sayDeath(IdPlayers.X) Life}
-					     {Send PortGUI removePlayer(IdPlayers.X)}
-					  end
+				       case Msg of sayDamageTaken(_ _ LifeLeft) then
+					  {Sender Msg Life}
+					  NewLife.X=LifeLeft
+					  {Send PortGUI lifeUpdate(IdPlayers.X NewLife.X)}
+				       [] sayDeath(_) then
+					  {Sender Msg Life}
+					  {Send PortGUI removePlayer(IdPlayers.X)}
+					  NewLife.X=0
 				       else
-					  NewLife.X = Life.X
+					  NewLife.X=Life.X
 				       end
+				       
 				    else
 				       NewLife.X=Life.X
 				    end
@@ -337,24 +335,19 @@ in
 				    if NewLife.X > 0 then
 				       {Send PortPlayers.X sayMineExplode(Id8 Mine Msg)}
 		                       %check the response of the player X
-				       if Msg \= null then
 
-			                  %the player X lost life point
-					  NewLifeAfterMine.X = {Max 0 NewLife.X-Msg}
-					  {Sender sayDamageTaken(IdPlayers.X Msg NewLifeAfterMine.X) NewLife}
-
-					  if NewLifeAfterMine.X > 0 then
-					     {Send PortGUI lifeUpdate(IdPlayers.X NewLifeAfterMine.X)}
-					  end
-
-					  if NewLifeAfterMine.X == 0 then
-			                     %The player X is dead
-					     {Sender sayDeath(IdPlayers.X) NewLife}
-					     {Send PortGUI removePlayer(IdPlayers.X)}
-					  end
+				       case Msg of sayDamageTaken(_ _ LifeLeft) then
+					  {Sender Msg Life}
+					  {Send PortGUI lifeUpdate(IdPlayers.X LifeLeft)}
+					  NewLifeAfterMine.X=LifeLeft
+				       [] sayDeath(_) then
+					  {Sender Msg Life}
+					  {Send PortGUI removePlayer(IdPlayers.X)}
+					  NewLifeAfterMine.X=0
 				       else
-					  NewLifeAfterMine.X = NewLife.X
+					  NewLifeAfterMine.X=NewLife.X
 				       end
+				       
 				    else
 				       NewLifeAfterMine.X = NewLife.X
 				    end
@@ -468,29 +461,24 @@ in
 		  {Send PortGUI explosion(Id7 P)}
 		  %say to each player that a missil was launched
 		  for X in 1..Input.nbPlayer do
-		     local Msg Lifex Life NewLife in
+		     local Msg Lifex Life in
 			%check the response of the player X
 			{Send PortLife life(p:X l:Lifex)}
 			{Send PortLife long(Life)}
 			if Lifex > 0 then
-			   {Send PortPlayers.X sayMissileExplode(Id7 P Msg)}
-			   if Msg \= null then
+			   {Send PortPlayers.X sayMissileExplode(Id7 P Msg)}	
 
-			      %the player X lost life point
-			      NewLife = {Max 0 Lifex-Msg}
-			      {Send PortLife newlife(p:X l:NewLife)}
-			      {Sender sayDamageTaken(IdPlayers.X Msg NewLife) Life}
-			      if NewLife > 0 then
-				 {Send PortGUI lifeUpdate(IdPlayers.X NewLife)}
-			      end
-
-			      if NewLife == 0 then
-			         %The player X is dead
-				 {Sender sayDeath(IdPlayers.X) Life}
-
-				 {Send PortGUI removePlayer(IdPlayers.X)}
-			      end
+			   case Msg of sayDamageTaken(_ _ LifeLeft) then
+			      {Sender Msg Life}
+			      {Send PortLife newlife(p:X l:LifeLeft)}
+			   [] sayDeath(_) then
+			      {Sender Msg Life}
+			      {Send PortLife newlife(p:X l:0)}
+			      {Send PortGUI removePlayer(IdPlayers.X)}
+			   else
+			      skip
 			   end
+			  
 			end
 
 		     end
@@ -564,7 +552,7 @@ in
 		  {Send PortGUI removeMine(Id8 Mine)}
                   %say to each player that a mine explode
 		  for X in 1..Input.nbPlayer do
-		     local  Msg Lifex Life NewLife  in
+		     local  Msg Lifex Life in
 			%check the response of the player X
 			{Send PortLife life(p:X l:Lifex)}
 			{Send PortLife long(Life)}
@@ -574,22 +562,19 @@ in
 			   {Send PortPlayers.X sayMineExplode(Id8 Mine Msg)}
 		           %check the response of the player X
 			   {Wait Msg}
-			   if Msg \=null then
-			      %the player X lost life point
-			      NewLife = {Max 0 Lifex-Msg}
-			      {Send PortLife newlife(p:X l:NewLife)}
-			      {Sender sayDamageTaken(IdPlayers.X Msg NewLife) Life}
 
-			      if NewLife > 0 then
-				 {Send PortGUI lifeUpdate(IdPlayers.X NewLife)}
-			      end
-
-			      if NewLife == 0 then
-			         %The player X is dead
-				 {Sender sayDeath(IdPlayers.X) Life}
-				 {Send PortGUI removePlayer(IdPlayers.X)}
-			      end
-			   end % end if Msg
+			   case Msg of sayDamageTaken(_ _ LifeLeft) then
+			      {Sender Msg Life}
+			      {Send PortGUI lifeUpdate(IdPlayers.X LifeLeft)}
+			      {Send PortLife newlife(p:X l:LifeLeft)}
+			   [] sayDeath(_) then
+			      {Sender Msg Life}
+			      {Send PortLife newlife(p:X l:0)}
+			      {Send PortGUI removePlayer(IdPlayers.X)}
+			   else
+			      skip
+			   end
+			   
 			end %end if lifex
 		     end %end local for
 		  end %end for
@@ -636,7 +621,7 @@ in
       for X in 1..Input.nbPlayer do
 	 thread {SimultaneousGame X Input.nbPlayer} end
       end
-      {Browse here}
+
       for X in 1.. Input.nbPlayer do
 	 {Wait End.X}
       end
